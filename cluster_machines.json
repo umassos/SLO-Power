@@ -1,0 +1,78 @@
+{
+    "machines": {
+        "power_allocator": [
+            {
+                "ip": "192.168.245.50",
+                "port": 8088
+            },
+            {
+                "ip": "192.168.245.51",
+                "port": 8088
+            },
+            {
+                "ip": "192.168.245.54",
+                "port": 8088
+            }
+        ],
+        "container_service": [
+            {
+                "ip": "192.168.245.50",
+                "port": 8089,
+                "container_name": [
+                    "mediawiki-50-1"
+                ]
+            },
+            {
+                "ip": "192.168.245.51",
+                "port": 8089,
+                "container_name": [
+                    "mediawiki-51-1"
+                ]
+            },
+            {
+                "ip": "192.168.245.54",
+                "port": 8089,
+                "container_name": [
+                    "mediawiki-54-1"
+                ]
+            }
+        ],
+        "core_allocator": [
+            {
+                "ip": "192.168.245.50",
+                "port": 8090,
+                "container_name": [
+                    "mediawiki-50-1"
+                ]
+            },
+            {
+                "ip": "192.168.245.51",
+                "port": 8090,
+                "container_name": [
+                    "mediawiki-51-1"
+                ]
+            },
+            {
+                "ip": "192.168.245.54",
+                "port": 8090,
+                "container_name": [
+                    "mediawiki-54-1"
+                ]
+            }
+        ],
+        "power_monitor": [
+            {
+                "ip": "192.168.245.50",
+                "port": 8091
+            },
+            {
+                "ip": "192.168.245.51",
+                "port": 8091
+            },
+            {
+                "ip": "192.168.245.54",
+                "port": 8091
+            }
+        ]
+    }
+}
