@@ -1,0 +1,7 @@
+boto3==1.26.146
+grpcio==1.54.2
+grpcio-tools==1.54.2
+numpy==1.24.3
+pandas==2.0.2
+python-dateutil==2.8.2
+urllib3==1.26.16
