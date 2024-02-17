@@ -1,5 +1,2 @@
-boto3==1.34.43
-botocore==1.34.43
 grpc==1.0.0
 numpy==1.26.4
-pandas==2.2.0

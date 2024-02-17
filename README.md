@@ -11,7 +11,29 @@ Below, we describe in detail:
 We run Ubuntu Ubuntu 20.04 LTS on our physical servers. The configuration described below was tested only for that particular version of operating system.
 
 ## Python installation
-We used Python version 3.8.10 in our setup. Therefore, we suggest you to use same version. 
+We used Python version 3.8.10 in our setup. Therefore, we suggest you to use same version.
+
+### Python modules
+SLO-Power requires the following Python modules:
+* grpc
+* numpy
+* rapl
+
+We generated [requirement.txt](src/requirements.txt) for required Python modules except rapl module because it is external module obtained from [here](https://github.com/wkatsak/py-rapl).
+
+We suggest you to create a Python virtual environment and install modules inside of this virtual environment. To install from requirements.txt, run the following command:
+
+`pip install -r /path/to/requirements.txt`
+
+To install rapl module, clone the repo first
+
+'git clone https://github.com/wkatsak/py-rapl.git`
+
+Then, go to the inside of the directory and run
+
+`pip install .`
+
+This command will use `setup.py` to install rapl module.
 
 ## LXD installation
 We used LXD version 5.19 for clustering and therefore application deployment. LXD can be installed using snap package manager. To install it,
@@ -72,10 +94,8 @@ Alternatively, you can download it using the following `gdown` command:
 
 We initialized above parameters with some values in this image. Therefore, you need to set them with correct values.
 
-[![DOI](https://zenodo.org/badge/758160062.svg)](https://zenodo.org/doi/10.5281/zenodo.10672465)
-
 ## Workload Generator
-Workload generator is provided in [workload-generator](./workload-generator/) folder. Our workload generator is based on httpmon workload generator. For installation details, please see [here](https://github.com/cloud-control/httpmon). Usage of workload generator is as follows:
+Workload generator is provided in [workload-generator](./workload-generator/) directory. Our workload generator is based on httpmon workload generator. For installation details, please see [here](https://github.com/cloud-control/httpmon). Usage of workload generator is as follows:
 
 `./generator $1 $2 $3` where
 
@@ -86,4 +106,6 @@ $2 --> workload trace file
 $3 --> name of the file that workload generator's output is logged
 
 ## Workload Traces
-We used two real workload traces: wikipedia and Azure traces. We scaled both wikipedia and Azure traces considering our cluster size. For wikipedia, we scaled traces between 60 and 240, while we scaled between 100 and 240 for Azure traces. All these traces are under [workload-traces](./workload-traces/) folder.
+We used two real workload traces: wikipedia and Azure traces. We scaled both wikipedia and Azure traces considering our cluster size. For wikipedia, we scaled traces between 60 and 240, while we scaled between 100 and 240 for Azure traces. All these traces are under [workload-traces](./workload-traces/) directory.
+
+[![DOI](https://zenodo.org/badge/758160062.svg)](https://zenodo.org/doi/10.5281/zenodo.10672465)
