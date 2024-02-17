@@ -1,8 +1,5 @@
 import grpc
-from concurrent import futures
 from Utility import Utility
-import manager_pb2 as pb2_mgr
-import manager_pb2_grpc as pb2_mgr_grpc
 import power_capper_pb2 as pb2_pwr
 import power_capper_pb2_grpc as pb2_pwr_grpc
 import dynamic_core_allocator_pb2 as pb2_core_allocator
@@ -12,7 +9,6 @@ import container_service_pb2_grpc as pb2_container_service_grpc
 import rapl_power_monitor_pb2 as pb2_monitor
 import rapl_power_monitor_pb2_grpc as pb2_monitor_grpc
 import argparse
-import pandas as pd
 import numpy as np
 import time
 import timeit
@@ -22,95 +18,25 @@ import subprocess
 import pickle
 import json
 import os
-from datetime import datetime
 
-f_allocated_power_data, f_estimated_power_data, f_real_rt, f_tail_rt, f_filtered_rt, f_log_file, f_error_value, f_drop_percent, f_est_number_of_request, f_service_rate, f_p_terms, f_i_terms, f_operating_points, f_integrator, f_integral_switch_on_off, f_allocated_number_of_core_data, f_reactively_allocated_number_of_core_data, f_proactively_allocated_number_of_core_data, f_measured_server_power, f_cpu_util, f_cpu_freq, f_rate_best_fit, f_cpu_util_best_fit, f_to_be_increased_core_list, f_to_be_reduced_core_list = "", "", "", "", "", "", "", "", "", "", "",  "", "", "",  "", "", "", "", "", "", "", "", "", "", ""
+f_allocated_power_data, f_real_rt, f_tail_rt, f_log_file, f_error_value, f_drop_percent, f_est_number_of_request, f_service_rate, f_allocated_number_of_core_data, f_reactively_allocated_number_of_core_data, f_proactively_allocated_number_of_core_data, f_measured_server_power, f_cpu_util, f_cpu_freq, f_rate_best_fit, f_cpu_util_best_fit, f_to_be_increased_core_list, f_to_be_reduced_core_list = "", "", "", "", "", "", "", "", "", "", "",  "", "", "",  "", "", "", ""
 
 # Instantiate Utility class to use utilities such as 'converting from second to millisecond', etc.
 my_utility = Utility()
 
-core_congestion_threshold = 8
-
-# machines_config_file = "/nfs/obelix/users1/msavasci/PoVerScaler/system-implementation/machines.csv"
-# machines_config_file = "/nfs/obelix/users1/msavasci/PoVerScaler/system-implementation/cluster_machines.json"
+# machines_config_file = "/nfs/obelix/users1/msavasci/PoVerScaler/system-implementation/single_machine.json"
 machines_config_file = "/nfs/obelix/users1/msavasci/PoVerScaler/system-implementation/cluster_machines.json"
-# config_file = "/nfs/obelix/users1/msavasci/PoVerScaler/system-implementation/power_manager_config.csv"
 config_file = "/nfs/obelix/users1/msavasci/PoVerScaler/system-implementation/power_manager_config.json"
 info_log_file = "/nfs/obelix/raid2/msavasci/SLO-Power-Experiments/SLO-Power/Experiment-423/info_log.txt"
 
-# core_power_file = "/nfs/obelix/users1/msavasci/PoVerScaler/system-implementation/core_power_consumption.csv"
 
-class ControlUnit:
-    def __init__(self, up_threshold, down_threshold) -> None:
-        self.counter_up = 0
-        self.counter_down = 0
-        self.up_threshold = up_threshold
-        self.down_threshold = down_threshold
-
-    def vertical_scaler(self, target_response_time, arrival_rate, service_rate):
-        return min(max(self.min_core, self.core_estimator(target_response_time, arrival_rate, service_rate)), self.max_core)
-
-    def core_estimator(self, target_response_time, arrival_rate, service_rate):
-        # It is according to [Liang et al.(2022)]
-        return math.ceil( (arrival_rate * target_response_time) / (service_rate * target_response_time - 1) )
-
-
-class PIController():
-    def __init__(self, min, max):
-        self.kp = 0.0
-        self.ki = 0.0
-        self.operating_point_control_value = 0.0
-        self.operating_point_output_value = 0.0
-        self.min_limit = min
-        self.max_limit = max
-
-    def set_parameters(self, kp, ki, cv, ov):
-        self.kp = kp
-        self.ki = ki
-        self.operating_point_control_value = cv
-        self.operating_point_output_value = ov
-
-
-class Machine():
-    def __init__(self, ip, port):
-        self.ip = ip
-        self.port = port
-
-
-# A class for handling controller generator service
-class PowerManager(pb2_mgr_grpc.PowerManagerServicer):
-    # Implementation of interface method defined in proto file.
-    def begin_power_manager(self, request, context):
-        # reqs, kp, ki, pwr, rt, a, b = initialize_controller(request.controller_data_file)
-        # control_unit_object = initialize_control_unit_object()
-        control_unit_object = []
-        print("Initializing the control unit object is done")
-        run_manager(PIController(request.pi_min, request.pi_max), control_unit_object, request.number_of_lines_to_be_read, request.sampling_time, request.tune_percentage, request.application_sub_path, request.ref_input, request.log_file, request.retraining_threshold)
-
-
-def core_power_limit(number_of_cores):
-    # This equation derived from core_power experiment. intel pstate driver with powersave governor.
-    # return math.ceil(2.81 * number_of_cores + 44.95)
-
-    # This equation derived from core_power experiment. acpi_freq driver with performance governor.
+def core_power_limit(number_of_cores):    
+    # The following equation has been derived for acpi_freq driver with performance governor.
     return math.floor(2.86 * number_of_cores + 46.52)
-
-
-def initialize_control_unit_object():
-    ''' Configuration variables '''
-    config_dict = {}
-
-    with open(config_file) as cf:
-        for line in cf:
-            splitted = line.split(',')
-            config_dict[splitted[0].strip()] = int(splitted[1].strip())
-
-    return ControlUnit(config_dict['up_threshold'], config_dict['down_threshold'])
 
 
 # This method returns [average response time, perct, #req/s, log_data, drop_rate, arrival_rate, service_rate] in this order
 def sample_log(log_file, percentile, sampling_time):
-    print(f"sampling start: {datetime.now()}")
     log_lines, response_times = [], []
     count_all_response_codes, count_not_200_response_codes = 0, 0
 
@@ -163,74 +89,13 @@ def sample_log(log_file, percentile, sampling_time):
 
     service_rate = int(count_all_response_codes / sampling_time)
 
-    # proc1 = subprocess.run(['cat', log_file], stdout=subprocess.PIPE)
-    # proc2 = subprocess.run(['halog', '-srv', '-q'], input=proc1.stdout, stdout=subprocess.PIPE)
-    # proc3 = subprocess.run(['tail', '-n', '1'], input=proc2.stdout, stdout=subprocess.PIPE)
-    # output = proc3.stdout.decode('utf-8').strip()
-    
-    # # average_rt = float("{:.2f}".format(int(output.split()[11]))) # Return as millisecond
-    # average_rt = int(output.split()[11]) # Return as millisecond
-    # service_rate = math.ceil(int(output.split()[2]) / sampling_time)
-    # # 5xx response codes / all response codes, so drop rate
-    # drop_rate = round(int(output.split()[5]) / int(output.split()[7]), 2)
-
-    # proc4 = subprocess.run(['halog', '-q', '-pct'], input=proc1.stdout, stdout=subprocess.PIPE)
-    # proc5 = subprocess.run(['grep', percentile], input=proc4.stdout, stdout=subprocess.PIPE)
-    # output = proc5.stdout.decode('utf-8').strip()
-
-    # perct = int(float(output.split()[4]))
-    
     # Clean the log file.
     subprocess.run(['sudo', 'truncate', '-s', '0', log_file], stdout=subprocess.PIPE)
     
-    print(f"sampling end: {datetime.now()}")
     return response_times, average_rt, perct, request_per_second, log_lines, drop_rate, arrival_rate, service_rate
 
-def write_to_file( allocated_power_data, measured_response_time_data, tail_response_time_data, error_data, drop_percentage, estimated_number_of_request_data, log_data, allocated_number_of_core_data, reactively_allocated_number_of_core_data, proactively_allocated_number_of_core_data, measured_server_power_data, cpu_util_data, service_rate_data, cpu_freq_data ):
-    with open(f_allocated_power_data, 'a', encoding='utf-8') as filehandle:
-        filehandle.write(''.join(f'({tup[0]},{tup[1]}),' for tup in allocated_power_data))
 
-    with open(f_measured_rt, 'a', encoding='utf-8') as filehandle:
-        filehandle.write(''.join(f'({tup[0]},{tup[1]}),' for tup in measured_response_time_data))
-
-    with open(f_tail_rt, 'a', encoding='utf-8') as filehandle:
-        filehandle.write(''.join(f'({tup[0]},{tup[1]}),' for tup in tail_response_time_data))
-
-    with open(f_error_value, 'a', encoding='utf-8') as filehandle:
-        filehandle.write(''.join(f'({tup[0]},{tup[1]}),' for tup in error_data))        
-
-    with open(f_drop_percent, 'a', encoding='utf-8') as filehandle:
-        filehandle.write(''.join(f'({tup[0]},{tup[1]}),' for tup in drop_percentage))    
-
-    with open(f_est_number_of_request, 'a', encoding='utf-8') as filehandle:
-        filehandle.write(''.join(f'({tup[0]},{tup[1]}),' for tup in estimated_number_of_request_data))
-    
-    with open(f_allocated_number_of_core_data, 'a', encoding='utf-8') as filehandle:
-        filehandle.write(''.join(f'({tup[0]},{tup[1]}),' for tup in allocated_number_of_core_data))
-
-    with open(f_reactively_allocated_number_of_core_data, 'a', encoding='utf-8') as filehandle:
-        filehandle.write(''.join(f'({tup[0]},{tup[1]}),' for tup in reactively_allocated_number_of_core_data))
-
-    with open(f_proactively_allocated_number_of_core_data, 'a', encoding='utf-8') as filehandle:
-        filehandle.write(''.join(f'({tup[0]},{tup[1]}),' for tup in proactively_allocated_number_of_core_data))
-
-    with open(f_measured_server_power, 'a', encoding='utf-8') as filehandle:
-        filehandle.write(''.join(f'({tup[0]},{tup[1]}),' for tup in measured_server_power_data))
-
-    with open(f_cpu_util, 'a', encoding='utf-8') as filehandle:
-        filehandle.write(''.join(f'({tup[0]},{tup[1]}),' for tup in cpu_util_data))
-
-    with open(f_service_rate, 'a', encoding='utf-8') as filehandle:
-        filehandle.write(''.join(f'({tup[0]},{tup[1]}),' for tup in service_rate_data))
-
-    with open(f_cpu_freq, 'a', encoding='utf-8') as filehandle:
-        filehandle.write(''.join(f'({tup[0]},{tup[1]}),' for tup in cpu_freq_data))
-
-    with open(f_log_file, 'wb') as filehandle:
-        pickle.dump(log_data, filehandle)
-
-
-def write_to_file_upt( allocated_power_data, measured_response_time_data, tail_response_time_data, error_data, drop_percentage, estimated_number_of_request_data, log_data, allocated_number_of_core_data, reactively_allocated_number_of_core_data, proactively_allocated_number_of_core_data, measured_server_power_data, cpu_util_data, service_rate_data, cpu_freq_data, best_fit_req_rate, best_fit_cpu_util, to_be_increased_list, to_be_reduced_list ):
+def write_to_file( allocated_power_data, measured_response_time_data, tail_response_time_data, error_data, drop_percentage, estimated_number_of_request_data, log_data, allocated_number_of_core_data, reactively_allocated_number_of_core_data, proactively_allocated_number_of_core_data, measured_server_power_data, cpu_util_data, service_rate_data, cpu_freq_data, best_fit_req_rate, best_fit_cpu_util, to_be_increased_list, to_be_reduced_list ):
     with open(f_allocated_power_data, 'a', encoding='utf-8') as filehandle:
         filehandle.write(''.join(f'({tup[0]},{tup[1]}),' for tup in allocated_power_data))
 
@@ -286,6 +151,49 @@ def write_to_file_upt( allocated_power_data, measured_response_time_data, tail_r
         pickle.dump(log_data, filehandle)
 
 
+def reactive_step_slow(scaling_flag, curr_number_of_core, step_limit):
+    if scaling_flag == "up":
+        return curr_number_of_core + step_limit
+    
+    if scaling_flag == "down":
+        return curr_number_of_core - step_limit
+            
+
+def reactive_vertical_scaler(min_core, max_core, curr_number_of_core, scaling_flag, step_size):
+    return min(max(min_core, reactive_step_slow(scaling_flag, curr_number_of_core, step_size)), max_core)
+
+
+def proactive_core_estimator(response_time_window, arrival_rate_window, service_rate_window, target_rt, arrival_rate_window_size):
+    
+    if len(arrival_rate_window) == 1:
+        arrival_rate = max(arrival_rate_window)
+
+    else:
+        arrival_rate = return_best_fit_point(arrival_rate_window, arrival_rate_window_size)
+    
+    # It is estimated unter max power under 1 core setting.
+    service_rate = 24
+    
+    expected_response_time = my_utility.convert_from_millisecond_to_second(target_rt)
+
+    print(f"Arrival rate: {arrival_rate}, service rate: {service_rate}, expected response time: {expected_response_time} s")
+    
+    try:
+        # It is according to [Liang et al.(2022)]
+        return math.ceil( (arrival_rate * expected_response_time) / (service_rate * expected_response_time - 1) )
+    except ZeroDivisionError as e:
+        return -1
+
+
+def proactive_vertical_scaler(min_core, max_core, response_time_window, arrival_rate_window, service_rate_window, target_rt, scaling_confidence_value, arrival_rate_window_size):
+    output = proactive_core_estimator(response_time_window, arrival_rate_window, service_rate_window, target_rt, arrival_rate_window_size)
+
+    if output == -1:
+        return -1
+
+    return min(max(min_core, output), max_core)
+
+
 def run_core_allocator(host, port, vm_name, number_of_cores):
     with grpc.insecure_channel(f'{host}:{port}') as channel:
         stub = pb2_core_allocator_grpc.DynamicCoreAllocatorStub(channel)
@@ -300,113 +208,6 @@ def run_power_allocator(host, port, allocated_power, cpu_package_count):
         response = stub.cap_power( pb2_pwr.Cap_Input( power_cap=int(my_utility.convert_from_watt_to_microwatt(allocated_power/cpu_package_count)) ) )
 
         return response.status
-
-
-def proactive_core_estimator(response_time_window, arrival_rate_window, service_rate_window, target_rt, arrival_rate_window_size):
-    # arrival_rate = max(arrival_rate_window)
-    if len(arrival_rate_window) == 1:
-        arrival_rate = max(arrival_rate_window)
-
-    else:
-        arrival_rate = return_best_fit_point(arrival_rate_window, arrival_rate_window_size)
-    
-    # service_rate = min(service_rate_window)
-    # service_rate = stat.mean(service_rate_window)
-    service_rate = 24
-    # prct = np.percentile(response_time_window, percentile)
-    # response_time = my_utility.convert_from_millisecond_to_second(prct)
-    expected_response_time = my_utility.convert_from_millisecond_to_second(target_rt)
-
-    print(f"Arrival rate: {arrival_rate}, service rate: {service_rate}, expected response time: {expected_response_time} s")
-    
-    try:
-        # It is according to [Liang et al.(2022)]
-        return math.ceil( (arrival_rate * expected_response_time) / (service_rate * expected_response_time - 1) )
-    except ZeroDivisionError as e:
-        return -1
-
-
-def reactive_step_slow(scaling_flag, curr_number_of_core, step_limit):
-    if scaling_flag == "up":
-        return curr_number_of_core + step_limit
-    
-    if scaling_flag == "down":
-        return curr_number_of_core - step_limit
-    
-
-def reactive_step_adaptive(scaling_flag, curr_number_of_core, target_rt, curr_rt, step_limit, ratio):
-    sigma = target_rt * ratio
-
-    step_control = (target_rt - curr_rt) / sigma
-
-    if scaling_flag == "up":
-        return curr_number_of_core - (step_control * step_limit)
-
-    if scaling_flag == "down":
-        return curr_number_of_core - (step_control * step_limit)
-
-
-def reactive_step_ratio(scaling_flag, curr_number_of_core, target_rt, curr_rt, step_limit):
-    return math.ceil(target_rt * curr_number_of_core / curr_rt)
-
-
-def reactive_core_estimator2(scaling_flag, curr_number_of_core):
-    if scaling_flag == "up":
-        if curr_number_of_core < core_congestion_threshold:
-            return pow(2, curr_number_of_core)
-        
-        else:
-            return curr_number_of_core + 1
-        
-    if scaling_flag == "down":
-        return int(curr_number_of_core / 2)
-    
-
-def reactive_core_estimator3(scaling_flag, curr_number_of_core):
-    if scaling_flag == "up":
-        if curr_number_of_core < core_congestion_threshold:
-            return pow(2, curr_number_of_core)
-        
-        else:
-            return curr_number_of_core + 1
-        
-    if scaling_flag == "down":
-        return curr_number_of_core - 1
-    
-
-def reactive_core_estimator4(scaling_flag, curr_number_of_core):
-    if scaling_flag == "up":
-        if curr_number_of_core < core_congestion_threshold:
-            return 2 * curr_number_of_core
-        
-        else:
-            return curr_number_of_core + 1
-        
-    if scaling_flag == "down":
-        return curr_number_of_core - 1
-
-
-def reactive_core_estimator5(scaling_flag, estimated_number_of_request, service_rate, curr_number_of_core):
-    required_number_of_core = math.ceil( (estimated_number_of_request - service_rate) / service_rate )
-    
-    if scaling_flag == "up":
-        return curr_number_of_core + required_number_of_core
-        
-    if scaling_flag == "down":
-        return curr_number_of_core - required_number_of_core
-
-
-def reactive_vertical_scaler(min_core, max_core, curr_number_of_core, scaling_flag, step_size):
-    return min(max(min_core, reactive_step_slow(scaling_flag, curr_number_of_core, step_size)), max_core)
-
-
-def proactive_vertical_scaler(min_core, max_core, response_time_window, arrival_rate_window, service_rate_window, target_rt, scaling_confidence_value, arrival_rate_window_size):
-    output = proactive_core_estimator(response_time_window, arrival_rate_window, service_rate_window, target_rt, arrival_rate_window_size)
-
-    if output == -1:
-        return -1
-
-    return min(max(min_core, output), max_core)
 
 
 def retrieve_cpu_freq_information(machine_ip, machine_port, container_name):
@@ -446,34 +247,9 @@ def retrieve_cpu_power_consumption(machine_ip, machine_port):
 # This method returns the hash of the last modification time of given file_name.
 def hash_of_file(file_name):
     modify_time = os.path.getmtime(file_name)
-    # print(modify_time)
     hashed_object = hash(modify_time)
-    # print(hashed_object)
-    # print()
+    
     return hashed_object
-
-
-def invoke_reactive_vertical_scaler(error, power_cap, min_power, max_power, min_core, max_core, curr_number_of_core):
-    if error < 0 and power_cap == max_power:
-        reactive_number_of_core = reactive_vertical_scaler(min_core, max_core, curr_number_of_core, "up")
-                
-    if error > 0 and power_cap == min_power:
-        reactive_number_of_core = reactive_vertical_scaler(min_core, max_core, curr_number_of_core, "down")
-
-    return reactive_number_of_core
-
-
-def error_to_power(error_value):
-    abs_error = abs(error_value)
-
-    if abs_error <= 0.25:
-        return 2
-    
-    if abs_error > 0.25 and abs_error <= 0.5:
-        return 4
-    
-    if abs_error > 0.5:
-        return 8    
     
 
 def required_number_of_core(arrival_rate, service_rate, target_rt):
@@ -496,7 +272,7 @@ def return_best_fit_point(point_window, window_size):
     return yn(window_size)
 
 
-def run_manager(pi_controller, control_unit, number_of_lines_to_be_read, sampling_time, tune_percentage, application_sub_path, ref_input, log_file, retraining_threshold):
+def run_manager(application_sub_path, ref_input, log_file, sampling_time):
     ''' To keep configuration variables '''
     config_dict = {}
 
@@ -645,7 +421,7 @@ def run_manager(pi_controller, control_unit, number_of_lines_to_be_read, samplin
 
         if timeit.default_timer() - recording_start_time >= recording_frequency:
             print("Recording to log file...")
-            write_to_file_upt(allocated_power_data, real_response_time_data, tail_response_time, error_data, drop_percentage, estimated_number_of_request_data, log_records, allocated_number_of_core, reactively_allocated_number_of_core, proactively_allocated_number_of_core, measured_server_power, cpu_util, service_rate_data, cpu_freq, best_fit_req_rate, best_fit_cpu_util, to_be_increased_list, to_be_decreased_list)
+            write_to_file(allocated_power_data, real_response_time_data, tail_response_time, error_data, drop_percentage, estimated_number_of_request_data, log_records, allocated_number_of_core, reactively_allocated_number_of_core, proactively_allocated_number_of_core, measured_server_power, cpu_util, service_rate_data, cpu_freq, best_fit_req_rate, best_fit_cpu_util, to_be_increased_list, to_be_decreased_list)
 
             real_response_time_data, tail_response_time, error_data, estimated_number_of_request_data, drop_percentage, service_rate_data, allocated_power_data, allocated_number_of_core, reactively_allocated_number_of_core, proactively_allocated_number_of_core, best_fit_req_rate, best_fit_cpu_util, to_be_increased_list, to_be_decreased_list = [], [], [], [], [], [], [], [], [], [], [], [], [], []
     
@@ -883,8 +659,6 @@ def run_manager(pi_controller, control_unit, number_of_lines_to_be_read, samplin
             if return_best_fit_point(cpu_util_window, cpu_util_window_size) > power_scale_down_cpu_util_threshold:
                 print("Proactively scaling up decision is gonna be taken...")
             
-                # to_be_increased_number_of_core = min(max_core * cluster_size - curr_number_of_core, abs(required_number_of_core(estimated_number_of_request, service_rate, guarded_slo_target) - required_number_of_core(previous_number_of_request, service_rate, guarded_slo_target)) * cluster_size) 
-
                 to_be_increased_number_of_core = min(max_core * cluster_size - curr_number_of_core, required_number_of_core(return_best_fit_point(request_rate_window, request_rate_window_size), service_rate, guarded_slo_target) * cluster_size - curr_number_of_core)
 
                 print(f"To be increased # cores: {to_be_increased_number_of_core}")
@@ -892,11 +666,6 @@ def run_manager(pi_controller, control_unit, number_of_lines_to_be_read, samplin
                 to_be_increased_list.append((iteration_counter, to_be_increased_number_of_core))
 
                 if to_be_increased_number_of_core < 0:
-                    # # Add allocated number of core into the list
-                    # allocated_number_of_core.append((iteration_counter, curr_number_of_core))
-                    # # Add allocated power into the list
-                    # allocated_power_data.append((iteration_counter, int(my_utility.convert_from_watt_to_microwatt(curr_power/number_of_cpu_sockets))))
-                    # continue
                     to_be_increased_number_of_core = reactive_scaling_up_min_step_size
 
                 to_be_increased_list.append((iteration_counter, to_be_increased_number_of_core))
@@ -913,16 +682,11 @@ def run_manager(pi_controller, control_unit, number_of_lines_to_be_read, samplin
                 curr_number_of_core = sum(runtime_container_core_dist.values())
                 reactively_allocated_number_of_core.append((iteration_counter, reactive_core))
 
-                # else:
-                #     reactively_allocated_number_of_core.append((iteration_counter, curr_number_of_core))
-
                 for m1 in machines["machines"]["core_allocator"]:
                     for m2 in m1["container_name"]:
                         step1_output = run_core_allocator(m1["ip"], m1["port"], m2, runtime_container_core_dist[(m1["ip"], m2)])
         
                         if step1_output == True:
-                            # curr_number_of_core = reactive_core
-                            # curr_number_of_core = max(curr_number_of_core, proactive_number_of_core)
                             print(f"{runtime_container_core_dist[(m1['ip'], m2)]} core(s) has been allocated to {m2} hosted on {m1['ip']}.")
                     
                         else:
@@ -964,7 +728,7 @@ def run_manager(pi_controller, control_unit, number_of_lines_to_be_read, samplin
             if counter_down >= reactive_scale_down_threshold:
                 print("Reactive scaling down decision is gonna be taken...")
 
-                # to_be_Reduced_number_of_core > cluster size??
+                # to_be_reduced_number_of_core > cluster size??
                 to_be_reduced_number_of_core = curr_number_of_core - required_number_of_core(return_best_fit_point(request_rate_window, request_rate_window_size), service_rate, guarded_slo_target) * cluster_size
 
                 print(f"To be decreased # cores up to : {to_be_reduced_number_of_core}")
@@ -989,8 +753,6 @@ def run_manager(pi_controller, control_unit, number_of_lines_to_be_read, samplin
                         step1_output = run_core_allocator(m1["ip"], m1["port"], m2, runtime_container_core_dist[(m1["ip"], m2)])
         
                         if step1_output == True:
-                            # curr_number_of_core = reactive_core
-                            # curr_number_of_core = max(curr_number_of_core, proactive_number_of_core)
                             print(f"{runtime_container_core_dist[(m1['ip'], m2)]} core(s) has been allocated to {m2} hosted on {m1['ip']}.")
                     
                         else:
@@ -1012,6 +774,7 @@ def run_manager(pi_controller, control_unit, number_of_lines_to_be_read, samplin
         if curr_power < (max(tmp_power_measurements) + max(tmp_power_measurements) * 0.1):
             # Add allocated number of core into the list
             allocated_number_of_core.append((iteration_counter, curr_number_of_core))
+            # Add allocated power into the list
             allocated_power_data.append((iteration_counter, int(my_utility.convert_from_watt_to_microwatt(curr_power/number_of_cpu_sockets)) ))
             continue
 
@@ -1042,44 +805,22 @@ def run_manager(pi_controller, control_unit, number_of_lines_to_be_read, samplin
         allocated_power_data.append((iteration_counter, int(my_utility.convert_from_watt_to_microwatt(curr_power/number_of_cpu_sockets)) ))
 
 
-def serve(host, port, max_workers):
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=max_workers))
-    pb2_mgr_grpc.add_PowerManagerServicer_to_server(PowerManager(), server)
-    ''' 
-    For using the insecure port
-    '''
-    # server.add_insecure_port(f"{host}:{port}")
-    server.add_insecure_port(f"[::]:{port}")
-    server.start()
-    print(f"Power Manager started on port {port} with {max_workers} workers.")
-    server.wait_for_termination()
-
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Power Manager Server", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument("-H", "--host", default="localhost",
-                        help="Network host")
-    parser.add_argument("-p", "--port", type=int, default=8090,
-                        help="Network port")
-    parser.add_argument("-w", "--workers", default=10,
-                        type=int, help="Max Number of workers")
+        description="SLO-Power Manager", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     
-    # parser.add_argument("-th", "--threshold", type=int, required=True, help="Retraining threshold")
+    parser.add_argument("-ap", "--application-subpath", default="/gw/", help="Subpath in application domain")
+    parser.add_argument("-ts", "--target-slo", default=250, type=int, help="target SLO response time")
+    parser.add_argument("-sl", "--source-log-file", default="/var/log/haproxy.log", help="HAProxy log file location")
+    parser.add_argument("-st", "--sampling-time", default=1, type=int, help="Sampling time of log file")
+
     parser.add_argument("-ap", "--allocated-power", default="./data/allocated-power.txt", help="File to keep allocated power")
-    parser.add_argument("-ep", "--estimated-power", default="./data/estimated-power.txt", help="File to keep estimated power")
-    parser.add_argument("-rt", "--measured-rt", default="./data/real-rt.txt", help="File to keep measured response time")
-    parser.add_argument("-trt", "--measured-tail-rt", default="./data/tail-rt.txt", help="File to keep measured tail response times")
-    parser.add_argument("-frt", "--filtered-rt", default="./data/filtered-rt.txt", help="File to keep filtered response time")
+    parser.add_argument("-mrt", "--mean-rt", default="./data/real-rt.txt", help="File to keep measured response time")
+    parser.add_argument("-trt", "--tail-rt", default="./data/tail-rt.txt", help="File to keep measured tail response times")
     parser.add_argument("-lf", "--log-file", default="./data/log-file.txt", help="File to keep interested log file columns")
     parser.add_argument("-ev", "--error-value", default="./data/error-value.txt", help="File to keep error value")
     parser.add_argument("-dp", "--drop-percent", default="./data/drop-percentage.txt", help="File to keep percentage of dropped requests")
     parser.add_argument("-er", "--est-number-of-request", default="./data/est-number-of-request.txt", help="File to keep estimated number of request")
-    parser.add_argument("-pt", "--p-terms", default="./data/p-terms.txt", help="File to keep p terms")
-    parser.add_argument("-it", "--i-terms", default="./data/i-terms.txt", help="File to keep i terms")
-    parser.add_argument("-op", "--operating-points", default="./data/operating-points.txt", help="File to keep operating points")
-    parser.add_argument("-in", "--integrator", default="./data/integrator.txt", help="File to keep integrator value")
-    parser.add_argument("-is", "--integral-switch-on-off", default="./data/integral-switch-on-off.txt", help="File to keep integrator switch on/off value")
     parser.add_argument("-ac", "--allocated-number-of-core", default="./data/integral-switch-on-off.txt", help="File to keep integrator switch on/off value")
     parser.add_argument("-rac", "--reactively-allocated-number-of-core", default="./data/integral-switch-on-off.txt", help="File to keep integrator switch on/off value")
     parser.add_argument("-pac", "--proactively-allocated-number-of-core", default="./data/integral-switch-on-off.txt", help="File to keep integrator switch on/off value")
@@ -1095,19 +836,12 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     f_allocated_power_data = args.allocated_power           # File for allocated power data
-    f_estimated_power_data = args.estimated_power           # File for estimated power data
     f_measured_rt = args.measured_rt                        # File for measured response time
     f_tail_rt = args.measured_tail_rt                       # File for tail response time
-    f_filtered_rt = args.filtered_rt                        # File for filtered response time
     f_log_file = args.log_file                              # File for interested apache log file columns
     f_error_value = args.error_value                        # File for controller input/error input
     f_drop_percent = args.drop_percent                      # File for keeping drop percentage
     f_est_number_of_request = args.est_number_of_request    # File for keeping estimating number of requests
-    f_p_terms = args.p_terms                                # File for keeping P terms
-    f_i_terms = args.i_terms                                # File for keeping I terms
-    f_operating_points = args.operating_points              # File for keeping operating point values
-    f_integrator = args.integrator                          # File for keeping integrator
-    f_integral_switch_on_off = args.integral_switch_on_off  # File for keeping integral switch on/off
     f_allocated_number_of_core_data = args.allocated_number_of_core  # File for keeping allocated number of core data
     f_reactively_allocated_number_of_core_data = args.reactively_allocated_number_of_core  # File for keeping reactively allocated number of core data
     f_proactively_allocated_number_of_core_data = args.proactively_allocated_number_of_core  # File for keeping proactively allocated number of core data
@@ -1120,4 +854,4 @@ if __name__ == "__main__":
     f_to_be_increased_core_list = args.to_be_increased_core
     f_to_be_reduced_core_list = args.to_be_decreased_core
 
-    serve(args.host, args.port, args.workers)
+    run_manager(args.application_subpath, args.target_slo, args.source_log_file, args.sampling_time)

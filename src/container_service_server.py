@@ -5,7 +5,6 @@ import container_service_pb2_grpc as pb2_grpc
 import argparse
 import subprocess
 import re
-import time
 import timeit
     
 class CPUTimer():

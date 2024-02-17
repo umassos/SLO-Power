@@ -1,10 +1,8 @@
 import grpc
 from concurrent import futures
-from Utility import Utility
 import power_capper_pb2 as pb2
 import power_capper_pb2_grpc as pb2_grpc
 import argparse
-import os
 import subprocess
 
 # A class for handling power tools service
@@ -17,17 +15,11 @@ class PowerCapper(pb2_grpc.PowerCapperServicer):
 
 
 def allocate_power(power_cap_value):
-    utility = Utility()
-
-    # proc1 = subprocess.run(['echo', str(int(utility.convert_from_watt_to_microwatt(power_cap_value)))], stdout=subprocess.PIPE)
     proc1 = subprocess.run(['echo', str(int(power_cap_value))], stdout=subprocess.PIPE)
     subprocess.run(['sudo', 'tee', '/sys/class/powercap/intel-rapl/intel-rapl:0/constraint_0_power_limit_uw'], input=proc1.stdout, stdout=subprocess.PIPE)
     subprocess.run(['sudo', 'tee', '/sys/class/powercap/intel-rapl/intel-rapl:1/constraint_0_power_limit_uw'], input=proc1.stdout, stdout=subprocess.PIPE)
 
     print(f"Power just capped at: {power_cap_value} Watts")
-
-    # os.system(f"echo {utility.convert_from_watt_to_microwatt(power_cap_value)} | sudo tee /sys/class/powercap/intel-rapl/intel-rapl:0/constraint_0_power_limit_uw")
-    # os.system(f"echo {utility.convert_from_watt_to_microwatt(power_cap_value)} | sudo tee /sys/class/powercap/intel-rapl/intel-rapl:1/constraint_0_power_limit_uw")
 
 
 def serve(port, max_workers):

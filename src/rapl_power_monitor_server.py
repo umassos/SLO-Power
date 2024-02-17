@@ -3,8 +3,6 @@ from concurrent import futures
 import rapl_power_monitor_pb2 as pb2
 import rapl_power_monitor_pb2_grpc as pb2_grpc
 import argparse
-import os
-import math
 import pickle
 import rapl
 

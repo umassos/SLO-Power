@@ -3,11 +3,7 @@ from concurrent import futures
 import dynamic_core_allocator_pb2 as pb2
 import dynamic_core_allocator_pb2_grpc as pb2_grpc
 import argparse
-# import libvirt
-# from pylxd import Client
-# import os
 import subprocess
-# import sys
 
    # A class for handling controller generator service
 class DynamicCoreAllocator(pb2_grpc.DynamicCoreAllocatorServicer):

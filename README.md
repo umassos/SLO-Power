@@ -10,7 +10,6 @@ Below, we describe in detail:
 # Configuration of Physical Servers
 We run Ubuntu Ubuntu 20.04 LTS on our physical servers. The configuration described below was tested only for that particular version of operating system.
 
-
 ## Python installation
 We used Python version 3.8.10 in our setup. Therefore, we suggest you to use same version. 
 
@@ -71,6 +70,20 @@ Alternatively, you can download it using the following `gdown` command:
 
 `gdown `
 
-We initialized above parameters in this image. Therefore, you need to set them with correct values.
+We initialized above parameters with some values in this image. Therefore, you need to set them with correct values.
 
 [![DOI](https://zenodo.org/badge/758160062.svg)](https://zenodo.org/doi/10.5281/zenodo.10672465)
+
+## Workload Generator
+Workload generator is provided in [workload-generator](./workload-generator/) folder. Our workload generator is based on httpmon workload generator. For installation details, please see [here](https://github.com/cloud-control/httpmon). Usage of workload generator is as follows:
+
+`./generator $1 $2 $3` where
+
+$1 --> IP address of HAProxy server
+
+$2 --> workload trace file
+
+$3 --> name of the file that workload generator's output is logged
+
+## Workload Traces
+We used two real workload traces: wikipedia and Azure traces. We scaled both wikipedia and Azure traces considering our cluster size. For wikipedia, we scaled traces between 60 and 240, while we scaled between 100 and 240 for Azure traces. All these traces are under [workload-traces](./workload-traces/) folder.
