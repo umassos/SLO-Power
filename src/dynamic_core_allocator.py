@@ -13,20 +13,6 @@ class DynamicCoreAllocator(pb2_grpc.DynamicCoreAllocatorServicer):
         subprocess.run(['lxc', 'config', 'set', request.domain_name, 'limits.cpu', str(request.number_of_cores)], stdout=subprocess.PIPE)
         print(f"{request.number_of_cores} has been allocated to {request.domain_name}")
 
-        # subprocess.run(['lxc', 'config', 'set', request.domain_name, 'limits.cpu', request.number_of_cores], stdout=subprocess.PIPE)
-        
-        # client = Client(cert=('./lxd.crt', './lxd.key'))
-        # client = Client()
-        # container = client.containers.get(request.domain_name)
-        # print(container.name)
-        # print(container.config)
-        # container_ins.config.update({'limits.cpu': number_of_cores})
-        # container.config = {'limits.cpu': str(request.number_of_cores)}
-        # container.save(wait=True)
-        # print(f"To be allocated core: {request.number_of_cores}")
-        # subprocess.run(['lxc', 'config', 'set', request.domain_name, 'limits.cpu', str(request.number_of_cores)], stdout=subprocess.PIPE)
-        # print(f"Allocated/Current core: {request.number_of_cores}")
-        # os.system(f"lxc config set {request.domain_name} limits.cpu {request.number_of_cores}")
         return pb2.Core_Output(status=True)
     
 
@@ -56,7 +42,6 @@ def serve(host, port, max_workers):
    
 
 if __name__ == "__main__":
-    # os.environ["LXD_DIR"] = "/var/lib/lxd"
     parser = argparse.ArgumentParser(
         description="Dynamic Core Allocator Server", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     
@@ -74,9 +59,6 @@ if __name__ == "__main__":
     
     parser.add_argument("-c", "--cores", default=16,
                         type=int, help="Default number of cores")
-    
-    parser.add_argument("-m", "--socket-to-cpu", default="/tmp/socket_to_cpu.txt",
-                        help="A file for keeping socket to cpu file")
     
     args = parser.parse_args()
 

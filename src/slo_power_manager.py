@@ -25,10 +25,8 @@ f_allocated_power_data, f_real_rt, f_tail_rt, f_log_file, f_error_value, f_drop_
 my_utility = Utility()
 
 # machines_config_file = "/nfs/obelix/users1/msavasci/PoVerScaler/system-implementation/single_machine.json"
-machines_config_file = "/nfs/obelix/users1/msavasci/PoVerScaler/system-implementation/cluster_machines.json"
-config_file = "/nfs/obelix/users1/msavasci/PoVerScaler/system-implementation/power_manager_config.json"
-info_log_file = "/nfs/obelix/raid2/msavasci/SLO-Power-Experiments/SLO-Power/Experiment-423/info_log.txt"
-
+machines_config_file = "./cluster_machines.json"
+config_file = "./power_manager_config.json"
 
 def core_power_limit(number_of_cores):    
     # The following equation has been derived for acpi_freq driver with performance governor.
@@ -272,7 +270,7 @@ def return_best_fit_point(point_window, window_size):
     return yn(window_size)
 
 
-def run_manager(application_sub_path, ref_input, log_file, sampling_time):
+def run_manager(application_sub_path, ref_input, log_file, sampling_time, info_log_file):
     ''' To keep configuration variables '''
     config_dict = {}
 
@@ -809,7 +807,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="SLO-Power Manager", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     
-    parser.add_argument("-ap", "--application-subpath", default="/gw/", help="Subpath in application domain")
+    parser.add_argument("-asp", "--application-subpath", default="/gw/", help="Subpath in application domain")
     parser.add_argument("-ts", "--target-slo", default=250, type=int, help="target SLO response time")
     parser.add_argument("-sl", "--source-log-file", default="/var/log/haproxy.log", help="HAProxy log file location")
     parser.add_argument("-st", "--sampling-time", default=1, type=int, help="Sampling time of log file")
@@ -832,6 +830,7 @@ if __name__ == "__main__":
     parser.add_argument("-bfc", "--best-fit-cpu-util", default="./data/best_fit_cpu_util.txt", help="File to keep best fit cpu util")
     parser.add_argument("-tbi", "--to-be-increased-core", default="./data/to_be_increased.txt", help="File to keep to be increased core estimation")
     parser.add_argument("-tbd", "--to-be-decreased-core", default="./data/to_be_decreased.txt", help="File to keep to be decreased core estimation")
+    parser.add_argument("-il", "--info-log", default="./info_log.txt", help="log file to log anomalies of the system")
 
     args = parser.parse_args()
 
@@ -854,4 +853,4 @@ if __name__ == "__main__":
     f_to_be_increased_core_list = args.to_be_increased_core
     f_to_be_reduced_core_list = args.to_be_decreased_core
 
-    run_manager(args.application_subpath, args.target_slo, args.source_log_file, args.sampling_time)
+    run_manager(args.application_subpath, args.target_slo, args.source_log_file, args.sampling_time, args.info_log)

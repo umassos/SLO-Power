@@ -21,7 +21,7 @@ SLO-Power requires the following Python modules:
 
 We generated [requirement.txt](src/requirements.txt) for required Python modules except rapl module because it is external module obtained from [here](https://github.com/wkatsak/py-rapl).
 
-We suggest you to create a Python virtual environment and install modules inside of this virtual environment. To install from requirements.txt, run the following command:
+We suggest you to create a Python virtual environment and install modules inside of this virtual environment. To install from `requirements.txt`, run the following command:
 
 `pip install -r /path/to/requirements.txt`
 
@@ -107,5 +107,90 @@ $3 --> name of the file that workload generator's output is logged
 
 ## Workload Traces
 We used two real workload traces: wikipedia and Azure traces. We scaled both wikipedia and Azure traces considering our cluster size. For wikipedia, we scaled traces between 60 and 240, while we scaled between 100 and 240 for Azure traces. All these traces are under [workload-traces](./workload-traces/) directory.
+
+## Running SLO-Power
+The source codes of SLO-Power is located under [src](./src/) directory. In the following, we will show how to run SLO-Power.
+
+### 1. Running SLO-Agent parts
+Our SLO-Agent has two modules: power capper and core allocator. 
+
+#### 1.a. Running power capper module (run with `sudo`)
+usage: power_capper_server.py [-h] [-p PORT] [-w WORKERS] [-e POWER]
+
+Power Capping Server
+
+optional arguments:
+
+  -h, --help            show this help message and exit
+
+  -p PORT, --port PORT  Network port (default: 8088)
+
+  -w WORKERS, --workers WORKERS
+                        Max Number of workers (default: 10)
+                        
+  -e POWER, --power POWER
+                        Default power (default: 85000000)
+
+#### 1.b. Running core allocator module
+usage: dynamic_core_allocator.py [-h] [-H HOST] [-p PORT] [-w WORKERS] [-d DOMAIN] [-c CORES]
+
+Dynamic Core Allocator
+
+optional arguments:
+  -h, --help            show this help message and exit
+
+  -H HOST, --host HOST  Network host (default: 0.0.0.0)
+
+  -p PORT, --port PORT  Network port (default: 8090)
+
+  -w WORKERS, --workers WORKERS
+                        Max number of workers (default: 10)
+
+  -d DOMAIN, --domain DOMAIN
+                        Default container (default: mediawiki-51-1)
+
+  -c CORES, --cores CORES
+                        Default number of cores (default: 16)
+
+We also developed two services to provide power measurement via Intel RAPL interface and container information such as its CPU utilization measurement. These two services can be run as follows.
+
+### 2. Running RAPL power measurement service (run with `sudo`)
+usage: rapl_power_monitor_server.py [-h] [-p PORT] [-w WORKERS]
+
+Container Service Server
+
+optional arguments:
+  -h, --help            show this help message and exit
+
+  -p PORT, --port PORT  Network port (default: 8091)
+  
+  -w WORKERS, --workers WORKERS
+                        Max Number of workers (default: 10)
+
+### 3. Running container service
+usage: container_service_server.py [-h] [-H HOST] [-p PORT] [-w WORKERS]
+
+Container Service Server
+
+optional arguments:
+  -h, --help            show this help message and exit
+
+  -H HOST, --host HOST  Network host (default: 0.0.0.0)
+
+  -p PORT, --port PORT  Network port (default: 8089)
+
+  -w WORKERS, --workers WORKERS
+                        Max Number of workers (default: 10)
+
+### 4. Running SLO-Power Manager
+We provided [bash script](./src/run_slo_power_manager.sh) to run slo-power manager. Usage of the script is as follows:
+
+`./run_slo_power_manager $1 $2 $3` where
+
+$1 --> filepath where experiment files are saved to
+
+$2 --> target SLO (in terms of ms)
+
+$3 --> time granularity that SLO-Power works (1s in our experiments)
 
 [![DOI](https://zenodo.org/badge/758160062.svg)](https://zenodo.org/doi/10.5281/zenodo.10672465)
