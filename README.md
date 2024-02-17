@@ -193,4 +193,4 @@ $2 --> target SLO (in terms of ms)
 
 $3 --> time granularity that SLO-Power works (1s in our experiments)
 
-[![DOI](https://zenodo.org/badge/758160062.svg)](https://zenodo.org/doi/10.5281/zenodo.10672465)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10673232.svg)](https://doi.org/10.5281/zenodo.10673232)
