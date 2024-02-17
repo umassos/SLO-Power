@@ -10,6 +10,19 @@ Below, we describe in detail:
 # Configuration of Physical Servers
 We run Ubuntu Ubuntu 20.04 LTS on our physical servers. The configuration described below was tested only for that particular version of operating system.
 
+
+## Python installation
+We used Python version 3.8.10 in our setup. Therefore, we suggest you to use same version. 
+
+## LXD installation
+We used LXD version 5.19 for clustering and therefore application deployment. LXD can be installed using snap package manager. To install it,
+
+`sudo snap install lxd --channel=5.19/stable`
+
+If you already have LXD in your machine, you can switch to version 5.19 using the following command
+
+`sudo snap refresh lxd --channel=5.19/stable`
+
 ## Application
 For our experiments, we used German Mediawiki with Memcached. You can download image from [here](https://drive.google.com/file/d/1nZ0pMFGASFhaA4tthHhLlgdFP-RGt5tH/view?usp=drive_link):
 
@@ -51,5 +64,13 @@ To verify it is installed, execute:
 This command should display the version number of the installed HAProxy.
 
 After haproxy is installed, its configuration file located at `/etc/haproxy/haproxy.cfg` needs to be edited. For convenience, we provied this configuration file as [haproxy.cfg](./haproxy.cfg). In this file, parameters of CONTAINER_NAME, IP_ADDRESS_OF_MACHINE_HOSTING_CONTAINER, and PORT_NUMBER_OF_CONTAINER must be provided. Here, CONTAINER_NAME is the container we created earlier which host Mediawiki application. In addition, PORT_NUMBER_OF_CONTAINER must be same as the one when creating the proxy for the container.
+
+We also provide HAProxy LXC image for your convenience. It can be downloaded from [here]()
+
+Alternatively, you can download it using the following `gdown` command:
+
+`gdown `
+
+We initialized above parameters in this image. Therefore, you need to set them with correct values.
 
 [![DOI](https://zenodo.org/badge/758160062.svg)](https://zenodo.org/doi/10.5281/zenodo.10672465)
