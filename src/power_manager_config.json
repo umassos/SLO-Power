@@ -21,8 +21,8 @@
             "reactive_scaling_down_min_step_size": 1,
             "reactive_scaling_up_min_step_size": 1,
             "request_rate_window_size": 5,
-	    "cpu_util_window_size": 3,
+	        "cpu_util_window_size": 3,
             "slo_guard": 0.8,
-	    "power_scale_down_cpu_util_threshold": 0.85
+	        "power_scale_down_cpu_util_threshold": 0.85
         }
 }

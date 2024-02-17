@@ -44,6 +44,10 @@ If you already have LXD in your machine, you can switch to version 5.19 using th
 
 `sudo snap refresh lxd --channel=5.19/stable`
 
+We provide a `json` file to let SLO-Power manager to know the machines in the cluster. For this purpose, please see and update [cluster_machines.json or single_machine.json](./src/cluster_machines.json) file.
+
+
+
 ## Application
 For our experiments, we used German Mediawiki with Memcached. You can download image from [here](https://drive.google.com/file/d/1nZ0pMFGASFhaA4tthHhLlgdFP-RGt5tH/view?usp=drive_link):
 
@@ -192,5 +196,7 @@ $1 --> filepath where experiment files are saved to
 $2 --> target SLO (in terms of ms)
 
 $3 --> time granularity that SLO-Power works (1s in our experiments)
+
+SLO-Power has parameters to set up. This parameters can be set up at [config](./src/power_manager_config.json) file.
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10673232.svg)](https://doi.org/10.5281/zenodo.10673232)
