@@ -1,12 +1,8 @@
 import grpc
 from concurrent import futures
 from Utility import Utility
-import pegasus_pb2 as pb2_mgr
-import pegasus_pb2_grpc as pb2_mgr_grpc
 import power_capper_pb2 as pb2_pwr
 import power_capper_pb2_grpc as pb2_pwr_grpc
-import dynamic_core_allocator_pb2 as pb2_core_allocator
-import dynamic_core_allocator_pb2_grpc as pb2_core_allocator_grpc
 import container_service_pb2 as pb2_container_service
 import container_service_pb2_grpc as pb2_container_service_grpc
 import rapl_power_monitor_pb2 as pb2_monitor
