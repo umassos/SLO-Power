@@ -90,11 +90,11 @@ This command should display the version number of the installed HAProxy.
 
 After haproxy is installed, its configuration file located at `/etc/haproxy/haproxy.cfg` needs to be edited. For convenience, we provied this configuration file as [haproxy.cfg](./haproxy.cfg). In this file, parameters of CONTAINER_NAME, IP_ADDRESS_OF_MACHINE_HOSTING_CONTAINER, and PORT_NUMBER_OF_CONTAINER must be provided. Here, CONTAINER_NAME is the container we created earlier which host Mediawiki application. In addition, PORT_NUMBER_OF_CONTAINER must be same as the one when creating the proxy for the container.
 
-We also provide HAProxy LXC image for your convenience. It can be downloaded from [here]()
+We also provide HAProxy LXC image for your convenience. It can be downloaded from [here](https://drive.google.com/file/d/1KtDZeMU-2enfnRhV5l147G-VW8CjHJHE/view?usp=drive_link)
 
 Alternatively, you can download it using the following `gdown` command:
 
-`gdown `
+`gdown 1KtDZeMU-2enfnRhV5l147G-VW8CjHJHE`
 
 We initialized above parameters with some values in this image. Therefore, you need to set them with correct values.
 
@@ -199,4 +199,4 @@ $3 --> time granularity that SLO-Power works (1s in our experiments)
 
 SLO-Power has parameters to set up. This parameters can be set up at [config](./src/power_manager_config.json) file.
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10673232.svg)](https://doi.org/10.5281/zenodo.10673232)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10673278.svg)](https://doi.org/10.5281/zenodo.10673278)
