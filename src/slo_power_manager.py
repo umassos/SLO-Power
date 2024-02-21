@@ -19,7 +19,7 @@ import pickle
 import json
 import os
 
-f_allocated_power_data, f_real_rt, f_tail_rt, f_log_file, f_error_value, f_drop_percent, f_est_number_of_request, f_service_rate, f_allocated_number_of_core_data, f_reactively_allocated_number_of_core_data, f_proactively_allocated_number_of_core_data, f_measured_server_power, f_cpu_util, f_cpu_freq, f_rate_best_fit, f_cpu_util_best_fit, f_to_be_increased_core_list, f_to_be_reduced_core_list = "", "", "", "", "", "", "", "", "", "", "",  "", "", "",  "", "", ""
+f_allocated_power_data, f_real_rt, f_tail_rt, f_log_file, f_error_value, f_drop_percent, f_est_number_of_request, f_service_rate, f_allocated_number_of_core_data, f_reactively_allocated_number_of_core_data, f_proactively_allocated_number_of_core_data, f_measured_server_power, f_cpu_util, f_cpu_freq, f_rate_best_fit, f_cpu_util_best_fit, f_to_be_increased_core_list, f_to_be_reduced_core_list = "", "", "", "", "", "", "", "", "", "", "",  "", "", "",  "", "", "", ""
 
 # Instantiate Utility class to use utilities such as 'converting from second to millisecond', etc.
 my_utility = Utility()
