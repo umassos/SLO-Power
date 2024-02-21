@@ -109,12 +109,12 @@ $2 --> IP address of HAProxy server
 
 $3 --> workload trace file
 
-$4 --> name of the file that workload generator's output is logged
+$4 --> version of the workload generator's output that is logged
 ```
 
 Example command on my end is 
 
-`./generator.sh /workspace1/httpmon/httpmon 192.168.245.55 ../workload-traces/wikipedia_full_trace.out /nfs/obelix/raid2/msavasci/artifact_eval/test3/generator.out`
+`./generator.sh /workspace/httpmon/httpmon 192.168.245.55:80 /nfs/obelix/users1/msavasci/SLO-Power/workload-traces/scaled_wikipedia_traces.out v1`
 
 ## Workload Traces
 We used two real workload traces: wikipedia and Azure traces. We scaled both wikipedia and Azure traces considering our cluster size. For wikipedia, we scaled traces between 60 and 240, while we scaled between 100 and 240 for Azure traces. All these traces are under [workload-traces](./workload-traces/) directory.

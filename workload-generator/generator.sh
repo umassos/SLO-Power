@@ -21,7 +21,7 @@ url="http://$IP_ADDRESS_LOAD_BALANCER/gw/index.php/Mehmed_II."
 # urlfile="./link.out"
 concurrencyfile=$3
 
-FIFO_FILE=/temp/httpmon.fifo
+FIFO_FILE=/tmp/httpmon.fifo
 version=$4
 FIFO_LOG=/tmp/httpmon-$version.log
 
