@@ -11,33 +11,26 @@
 
 IP_ADDRESS_LOAD_BALANCER=$2
 
-# t=190 # Time in seconds between URLs
-t=10
-# t=1
+t=10 # Number of second each workload level is exposed
 n=1 # Number of URLs to load
 ratio=1
 
 # URL to generate load for
 url="http://$IP_ADDRESS_LOAD_BALANCER/gw/index.php/Mehmed_II."
 
-urlfile="./link.out"
+# urlfile="./link.out"
 concurrencyfile=$3
-# concurrencyfile="./wikipedia_cluster_1_short.out"
-# concurrencyfile="./eval_workload7.out"
-# concurrencyfile="./azure_trace_slice3_100_240_cluster.out"
-# concurrencyfile="./azure_trace_slice3_1_100_240_cluster.out"
 
-FIFO_FILE=httpmon.fifo
-# version="feb16-1.log"
+FIFO_FILE=/temp/httpmon.fifo
 version=$4
-FIFO_LOG=httpmon-$version
+FIFO_LOG=/tmp/httpmon-$version.log
 
 #
 # Useful functions
 #
-function readline {
-        echo $url/`sed "$1q;d" $urlfile`
-}
+# function readline {
+#         echo $url/`sed "$1q;d" $urlfile`
+# }
 function readlineANDcolumn {
         echo `awk '(NR==$1){print $1}' $concurrencyfile`
 }
@@ -116,4 +109,4 @@ done < $concurrencyfile
 echo "Finishing..."
 setStop
 httpmonKill
-mv httpmon-dump.csv httpmon-dump-$version.csv
+# mv httpmon-dump.csv httpmon-dump-$version.csv
