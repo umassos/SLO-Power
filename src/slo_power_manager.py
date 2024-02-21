@@ -19,13 +19,13 @@ import pickle
 import json
 import os
 
-f_allocated_power_data, f_real_rt, f_tail_rt, f_log_file, f_error_value, f_drop_percent, f_est_number_of_request, f_service_rate, f_allocated_number_of_core_data, f_reactively_allocated_number_of_core_data, f_proactively_allocated_number_of_core_data, f_measured_server_power, f_cpu_util, f_cpu_freq, f_rate_best_fit, f_cpu_util_best_fit, f_to_be_increased_core_list, f_to_be_reduced_core_list = "", "", "", "", "", "", "", "", "", "", "",  "", "", "",  "", "", "", ""
+f_allocated_power_data, f_real_rt, f_tail_rt, f_log_file, f_error_value, f_drop_percent, f_est_number_of_request, f_service_rate, f_allocated_number_of_core_data, f_reactively_allocated_number_of_core_data, f_proactively_allocated_number_of_core_data, f_measured_server_power, f_cpu_util, f_cpu_freq, f_rate_best_fit, f_cpu_util_best_fit, f_to_be_increased_core_list, f_to_be_reduced_core_list = "", "", "", "", "", "", "", "", "", "", "",  "", "", "",  "", "", ""
 
 # Instantiate Utility class to use utilities such as 'converting from second to millisecond', etc.
 my_utility = Utility()
 
 # machines_config_file = "/nfs/obelix/users1/msavasci/PoVerScaler/system-implementation/single_machine.json"
-machines_config_file = "./sinlge_machine.json"
+machines_config_file = "./single_machine.json"
 config_file = "./power_manager_config.json"
 
 def core_power_limit(number_of_cores):    
@@ -773,7 +773,7 @@ if __name__ == "__main__":
 
     f_allocated_power_data = args.allocated_power           # File for allocated power data
     f_measured_rt = args.mean_rt                            # File for mean response time
-    f_tail_rt = args.tail_rt                       # File for tail response time
+    f_tail_rt = args.tail_rt                                # File for tail response time
     f_log_file = args.log_file                              # File for interested apache log file columns
     f_error_value = args.error_value                        # File for controller input/error input
     f_drop_percent = args.drop_percent                      # File for keeping drop percentage

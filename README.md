@@ -186,6 +186,8 @@ optional arguments:
   -w WORKERS, --workers WORKERS
                         Max Number of workers (default: 10)
 
+**Warning** Before running the SLO-Power Manager, make sure that application is warmed up by sending requests from the workload generator.
+
 ### 4. Running SLO-Power Manager
 We provided [bash script](./src/run_slo_power_manager.sh) to run slo-power manager. Usage of the script is as follows:
 
@@ -199,8 +201,12 @@ $3 --> time granularity that SLO-Power works (1s in our experiments)
 
 $4 --> filepath where HAProxy log file is (Default is /var/log/haproxy.log)
 
-SLO-Power has parameters to set up. This parameters can be set up at [config](./src/power_manager_config.json) file.
+We provide two configuration files which are required to set if the experiment runs at the single machine level or cluster level. These configuration files are [single_machine.json](./src/single_machine.json) and [cluster_machines.json](./src/cluster_machines.json). These files should be modified based on your own setup. We hardcoded this configuration file in [slo_power_manager.py](./src/slo_power_manager.py) at line 28 as `machines_config_file = "./single_machine.json"`. This line should be updated with the configuration file that is based on your setup.
 
-In addition, we provide two configuration files which are required to mention if the experiment runs at the single machine level or cluster level. These configuration files are [single_machine.json](./src/single_machine.json) and [cluster_machines.json](./src/cluster_machines.json). These files should be modified based on your own setup. We hardcoded this configuration file in [slo_power_manager](./src/slo_power_manager.py) at line 28 as `machines_config_file = "./single_machine.json"`. This line should be updated with the configuration file that is based on your setup. 
+In addition, SLO-Power has parameters to set up. This parameters can be set up at [config](./src/power_manager_config.json) file. From this configuration file, a few parameters are specific to setup (single machine level or cluster level). These parameters are given below and should be set accordingly.
+
+```cluster_size``` is to mention how many machines are used in the experiment (total number of machines mentioned in `single_machine.json`, i.e., 1 or in `cluster_machines.json`)
+
+```service_rate``` keeps service rate of the application under the setup.
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10673278.svg)](https://doi.org/10.5281/zenodo.10673278)

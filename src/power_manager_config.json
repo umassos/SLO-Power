@@ -17,7 +17,7 @@
             "vertical_scaler_confidence": 0,
             "power_reduction_rate": 0.125,
             "power_decrement_coefficient": 0.2,
-            "cluster_size": 3,
+            "cluster_size": 1,
             "reactive_scaling_down_min_step_size": 1,
             "reactive_scaling_up_min_step_size": 1,
             "request_rate_window_size": 5,
