@@ -100,14 +100,15 @@ We initialized above parameters with some values in this image. Therefore, you n
 
 ## Workload Generator
 Workload generator is provided in [workload-generator](./workload-generator/) directory. Our workload generator is based on httpmon workload generator. For installation details, please see [here](https://github.com/cloud-control/httpmon). Usage of workload generator is as follows:
-
-`./generator $1 $2 $3` where
+```
+./generator $1 $2 $3 where
 
 $1 --> IP address of HAProxy server
 
 $2 --> workload trace file
 
 $3 --> name of the file that workload generator's output is logged
+```
 
 ## Workload Traces
 We used two real workload traces: wikipedia and Azure traces. We scaled both wikipedia and Azure traces considering our cluster size. For wikipedia, we scaled traces between 60 and 240, while we scaled between 100 and 240 for Azure traces. All these traces are under [workload-traces](./workload-traces/) directory.
@@ -194,10 +195,12 @@ optional arguments:
                         Max Number of workers (default: 10)
 ```
 
-**Warning** Before running the SLO-Power Manager, make sure that application is warmed up by sending requests from the workload generator.
+**Warning:** Before running the SLO-Power Manager, make sure that application is warmed up by sending requests from the workload generator. For example, on my side,
+
+```./httpmon --url http://192.168.245.55/gw/index.php/Mehmed_II. --concurrency 40 --thinktime 1 --open```
 
 ### 4. Running SLO-Power Manager
-We provided a [bash script](./src/run_slo_power_manager.sh) to run slo-power manager Python file. Usage of the script is as follows:
+We provide a [bash script](./src/run_slo_power_manager.sh) to run slo-power manager Python file. Usage of the script is as follows:
 
 ```
 ./run_slo_power_manager $1 $2 $3 $4 where
@@ -211,13 +214,13 @@ $3 --> time granularity that SLO-Power works (1s in our experiments)
 $4 --> filepath where HAProxy log file is (Default is /var/log/haproxy.log)
 ```
 
-In the `run_slo_power_manager`, you might need to change `python` command at line 31 based on your setup.
+In the `run_slo_power_manager`, you might need to change `python` command at line 31 based on your setup. For example, if your `python` call is as `python3`, then replace `python` with `python3`.
 
 Example command I have ran successfully on my end is
 
 `./run_slo_power_manager.sh /nfs/obelix/raid2/msavasci/artifact_eval/test2/ 250 1 /var/log/haproxy.log`
 
-Sample outout on my end is
+Sample output on my end is
 
 ```
 Min core: 2, Max core: 16
