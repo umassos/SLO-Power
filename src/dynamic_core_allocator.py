@@ -54,7 +54,7 @@ if __name__ == "__main__":
     parser.add_argument("-w", "--workers", default=10,
                         type=int, help="Max number of workers")
 
-    parser.add_argument("-d", "--domain", default="mediawiki-50",
+    parser.add_argument("-d", "--domain", default="mediawiki-51-1",
                         help="Default container")
     
     parser.add_argument("-c", "--cores", default=16,

@@ -24,6 +24,6 @@
 	        "cpu_util_window_size": 3,
             "slo_guard": 0.8,
 	        "power_scale_down_cpu_util_threshold": 0.85,
-            "service_rate": 24
+            "service_rate": 9
         }
 }

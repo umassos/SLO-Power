@@ -25,7 +25,7 @@ f_allocated_power_data, f_real_rt, f_tail_rt, f_log_file, f_error_value, f_drop_
 my_utility = Utility()
 
 # machines_config_file = "/nfs/obelix/users1/msavasci/PoVerScaler/system-implementation/single_machine.json"
-machines_config_file = "./cluster_machines.json"
+machines_config_file = "./sinlge_machine.json"
 config_file = "./power_manager_config.json"
 
 def core_power_limit(number_of_cores):    
@@ -772,8 +772,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     f_allocated_power_data = args.allocated_power           # File for allocated power data
-    f_measured_rt = args.measured_rt                        # File for measured response time
-    f_tail_rt = args.measured_tail_rt                       # File for tail response time
+    f_measured_rt = args.mean_rt                            # File for mean response time
+    f_tail_rt = args.tail_rt                       # File for tail response time
     f_log_file = args.log_file                              # File for interested apache log file columns
     f_error_value = args.error_value                        # File for controller input/error input
     f_drop_percent = args.drop_percent                      # File for keeping drop percentage
