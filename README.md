@@ -105,7 +105,7 @@ After you download the container image tarball, you need to restore and create a
 `lxc launch {IMAGE_NAME} {CONTAINER_NAME}`
 
 ## Workload Generator
-Workload generator is provided in [workload-generator](./workload-generator/) directory. Our workload generator is based on httpmon workload generator. For installation details, please see [here](https://github.com/cloud-control/httpmon). Usage of workload generator is as follows:
+Workload generator is provided in [workload-generator](./workload-generator/) directory. Our workload generator is based on httpmon workload generator. For installation details, please see [here](https://github.com/cloud-control/httpmon). Usage of workload generator is as follows (Assume it is called inside `workload-generator` directory):
 ```
 ./generator $1 $2 $3 $4 where
 
@@ -123,6 +123,10 @@ For example, the following command
 `./generator.sh /workspace/httpmon 192.168.245.55 /SLO-Power/workload-traces/single_node_level_scaled_wikipedia_traces.out v1`
 
 initiates a httpmon workload generator, using binary located at `/workspace` directory, using traces of `single_node_level_scaled_wikipedia_traces.out`, sending requests to HAProxy hosting on IP of `192.168.245.55`, and saving workload generator output with `v1` postfix. By default, the workload generator output is saved under `/tmp` directory.
+
+Please do not forget to give `generator.sh` executable permission using `chmod` command, e.g.,
+
+`chmod 755 generator.sh`
 
 ## Workload Traces
 We used two real workload traces: wikipedia and Azure traces. We scaled both wikipedia and Azure traces considering our cluster size. For wikipedia, we scaled traces between 60 and 240, while we scaled between 100 and 240 for Azure traces. All these traces are under [workload-traces](./workload-traces/) directory. In addition to the cluster level workload traces, we provided single node level workload traces in the same folder as well. You should pick them accordingly based on your setup.
