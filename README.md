@@ -90,13 +90,19 @@ This command should display the version number of the installed HAProxy.
 
 After haproxy is installed, its configuration file located at `/etc/haproxy/haproxy.cfg` needs to be edited. For convenience, we provied this configuration file as [haproxy.cfg](./haproxy.cfg). In this file, parameters of `CONTAINER_NAME`, `IP_ADDRESS_OF_MACHINE_HOSTING_CONTAINER`, and `PORT_NUMBER_OF_CONTAINER` must be provided. Here, `CONTAINER_NAME` is the container we created earlier which host Mediawiki application. In addition, `PORT_NUMBER_OF_CONTAINER` must be same as the one when creating the proxy for the container.
 
+We initialized above parameters with some values in this image. Therefore, you need to set them with correct values.
+
 We also provide HAProxy LXC image for your convenience. It can be downloaded from [here](https://drive.google.com/file/d/1KtDZeMU-2enfnRhV5l147G-VW8CjHJHE/view?usp=drive_link)
 
 Alternatively, you can download it using the following `gdown` command:
 
 `gdown 1KtDZeMU-2enfnRhV5l147G-VW8CjHJHE`
 
-We initialized above parameters with some values in this image. Therefore, you need to set them with correct values.
+After you download the container image tarball, you need to restore and create a container from it. To do this, run the following commands:
+
+`lxc image import haproxy_container.tar.gz --alias {IMAGE_NAME}`
+
+`lxc launch {IMAGE_NAME} {CONTAINER_NAME}`
 
 ## Workload Generator
 Workload generator is provided in [workload-generator](./workload-generator/) directory. Our workload generator is based on httpmon workload generator. For installation details, please see [here](https://github.com/cloud-control/httpmon). Usage of workload generator is as follows:
@@ -112,12 +118,14 @@ $3 --> workload trace file
 $4 --> version of the workload generator's output that is logged
 ```
 
-Example command on my end is 
+For example, the following command 
 
-`./generator.sh /workspace/httpmon/httpmon 192.168.245.55 /nfs/obelix/users1/msavasci/SLO-Power/workload-traces/scaled_wikipedia_traces.out v1`
+`./generator.sh /workspace/httpmon 192.168.245.55 /SLO-Power/workload-traces/scaled_wikipedia_traces.out v1`
+
+initiates a httpmon workload generator, using binary located at `/workspace` directory, using traces of `single_node_level_scaled_wikipedia_traces.out`, sending requests to HAProxy hosting on IP of `192.168.245.55`, and saving workload generator output with `v1` postfix. By default, the workload generator output is saved under `/tmp/` directory.
 
 ## Workload Traces
-We used two real workload traces: wikipedia and Azure traces. We scaled both wikipedia and Azure traces considering our cluster size. For wikipedia, we scaled traces between 60 and 240, while we scaled between 100 and 240 for Azure traces. All these traces are under [workload-traces](./workload-traces/) directory. In addition to the cluster level workload traces, we providep single node level workload traces in the same folder as well. You should pick use them accordingly based on your setup.
+We used two real workload traces: wikipedia and Azure traces. We scaled both wikipedia and Azure traces considering our cluster size. For wikipedia, we scaled traces between 60 and 240, while we scaled between 100 and 240 for Azure traces. All these traces are under [workload-traces](./workload-traces/) directory. In addition to the cluster level workload traces, we provided single node level workload traces in the same folder as well. You should pick them accordingly based on your setup.
 
 ## Running SLO-Power
 The source codes of SLO-Power is located under [src](./src/) directory. In the following, we will show how to run SLO-Power.
@@ -201,9 +209,11 @@ optional arguments:
                         Max Number of workers (default: 10)
 ```
 
-**Warning:** Before running the SLO-Power Manager, make sure that application is warmed up by sending requests from the workload generator. For example, on my side,
+**Warning:** Before running the SLO-Power Manager, make sure that application is warmed up by sending requests from the workload generator. For example, the following command
 
-```./httpmon --url http://192.168.245.55/gw/index.php/Mehmed_II. --concurrency 40 --thinktime 1 --open```
+```/workspace/httpmon --url http://192.168.245.55/gw/index.php/Mehmed_II. --concurrency 40 --thinktime 1 --open```
+
+initiates a httpmon workload generator, using binary located at `/workspace` directory, sending requests to HAProxy hosting on IP of `192.168.245.55` with application path of `gw/index.php/`, and requesting `Mehmed_II.` page `40 times per second`. More details of this command can be found [here](https://github.com/cloud-control/httpmon). 
 
 ### 4. Running SLO-Power Manager
 We provide a [bash script](./src/run_slo_power_manager.sh) to run slo-power manager Python file. Usage of the script is as follows:
