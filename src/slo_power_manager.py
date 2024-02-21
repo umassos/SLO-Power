@@ -169,8 +169,9 @@ def proactive_core_estimator(response_time_window, arrival_rate_window, service_
     else:
         arrival_rate = return_best_fit_point(arrival_rate_window, arrival_rate_window_size)
     
-    # It is estimated unter max power under 1 core setting.
-    service_rate = 24
+    # It is estimated under max power under 1 core setting.
+    # service_rate = 24
+    service_rate = stat.mean(service_rate_window)
     
     expected_response_time = my_utility.convert_from_millisecond_to_second(target_rt)
 
@@ -294,36 +295,13 @@ def run_manager(application_sub_path, ref_input, log_file, sampling_time, info_l
     slo_guard = config_dict["system_configs"]["slo_guard"]
     request_rate_window_size = config_dict["system_configs"]["request_rate_window_size"]
     cpu_util_window_size = config_dict["system_configs"]["cpu_util_window_size"]
-    # power_reduction_rate = config_dict["system_configs"]["power_reduction_rate"] # This value is based on increment power values in watts in RAPL.
     power_step = config_dict["system_configs"]['power_step']
-    power_scale_down_cpu_util_threshold = config_dict["system_configs"]["power_scale_down_cpu_util_threshold"] 
+    power_scale_down_cpu_util_threshold = config_dict["system_configs"]["power_scale_down_cpu_util_threshold"]
+    # service_rate = 9 # This is based on the measurement of Mediawiki application for a single server. Setup: acpi_cpufreq driver with performance governor.
+    # service_rate = 24 # This is based on the measurement of Mediawiki application for 3-machines setup. Setup: acpi_cpufreq driver with userpspace governor (2.1 GHz).
+    service_rate = config_dict["system_configs"]["service_rate"]
     
     print(f"Min core: {min_core}, Max core: {max_core * cluster_size}")
-
-    # power_capper_machines = []
-
-    # df_machines = pd.read_csv(machines_config_file)
-
-    # df_machines_filtered = df_machines[df_machines['description'] == 'power_allocator']
-
-    # for _, model_line in df_machines_filtered.iterrows():
-    #     power_capper_machines.append(Machine(str(model_line['machine_ip']), int(model_line['port'])))
-
-    # core_allocator_machines = []
-
-    # df_machines_filtered = df_machines[df_machines['description'] == 'core_allocator']
-
-    # for _, model_line in df_machines_filtered.iterrows():
-    #     core_allocator_machines.append(Machine(str(model_line['machine_ip']), int(model_line['port'])))
-
-    # container_servicer_machines = []
-
-    # df_machines_filtered = df_machines[df_machines['description'] == 'container_service']
-
-    # for _, model_line in df_machines_filtered.iterrows():
-    #     container_servicer_machines.append(Machine(str(model_line['machine_ip']), int(model_line['port'])))
-
-    # allocated_power_data, real_response_time_data, tail_response_time, error_data, estimated_number_of_request_data, drop_percentage, allocated_number_of_core, reactively_allocated_number_of_core, proactively_allocated_number_of_core, measured_server_power, cpu_util, service_rate_data, cpu_freq = [], [], [], [], [], [], [], [], [], [], [], [], []
 
     # Define list holding measurements/variables during experiment
     real_response_time_data, tail_response_time, error_data, estimated_number_of_request_data, drop_percentage, service_rate_data, allocated_power_data, allocated_number_of_core, reactively_allocated_number_of_core, proactively_allocated_number_of_core, best_fit_req_rate, best_fit_cpu_util, to_be_increased_list, to_be_decreased_list = [], [], [], [], [], [], [], [], [], [], [], [], [], []
@@ -331,11 +309,6 @@ def run_manager(application_sub_path, ref_input, log_file, sampling_time, info_l
     measured_server_power, cpu_util, cpu_freq = [], [], []
 
     log_records = {}
-
-    # power_scaler_confidence_coefficient = 0.1
-
-    # error_threshold = 0.1
-    # rt_percentile = "95.0"
 
     with open(machines_config_file) as f:
         machines = json.load(f)
@@ -346,15 +319,12 @@ def run_manager(application_sub_path, ref_input, log_file, sampling_time, info_l
         for m2 in m1["container_name"]:
             machine_curr_number_of_cores[(m1["ip"], m2)] = retrieve_container_core_information(m1["ip"], m1["port"], m2)
 
-    # curr_number_of_core = retrieve_container_core_information(container_servicer_machines, "mediawiki-54-1")
-
     machine_power_limits = {}
 
     for k1 in machine_curr_number_of_cores:
         machine_power_limits[k1] = core_power_limit(machine_curr_number_of_cores[k1])
 
     print(f"Current core info of containers: {machine_curr_number_of_cores}")
-    print(f"Controller min power limit for node: {pi_controller.min_limit}")
     print(f"Controller max power limit for node: {machine_power_limits}")
     print(f"Target response time of the application: {ref_input} ms")
 
@@ -393,7 +363,6 @@ def run_manager(application_sub_path, ref_input, log_file, sampling_time, info_l
         if prev_hash != hash_of_file(log_file):
             break
 
-    # time.sleep(5)
     time.sleep(10)
 
     proactive_scaler_start_time = timeit.default_timer()
@@ -404,12 +373,6 @@ def run_manager(application_sub_path, ref_input, log_file, sampling_time, info_l
     print("HAProxy log file is cleared for the initialization purpose.")
 
     while True:
-        # if initial_wait_flag == True:
-        #     # time.sleep(sampling_time * max(cpu_util_window_size, request_rate_window_size))
-        #     time.sleep(sampling_time * 2)
-        #     subprocess.run(['sudo', 'truncate', '-s', '0', log_file], stdout=subprocess.PIPE)
-        #     initial_wait_flag = False
-
         runtime_container_cpu_util, runtime_host_power_dist = {}, {}
         total_cpu_util, core_per_part, reactive_core = 0, 0, 0
         curr_cpu_util = 0
@@ -437,9 +400,7 @@ def run_manager(application_sub_path, ref_input, log_file, sampling_time, info_l
             print(f"No (logical) response time has been read; therefore, wait for {sampling_time} seconds.")
             continue
 
-        # service_rate = 3 # This is based on the measurement of Mediawiki application. Setup: intel_pstate driver with powersave governor.
-        # service_rate = 9 # This is based on the measurement of Mediawiki application for a single server. Setup: acpi_cpufreq driver with performance governor.
-        service_rate = 24 # This is based on the measurement of Mediawiki application for 3-machines setup. Setup: acpi_cpufreq driver with userpspace governor (2.1 GHz).
+        service_rate = config_dict["system_configs"]["service_rate"]
 
         response_times_window.append(percent_rt)
         arrival_rates_window.append(arrival_rate)
@@ -466,9 +427,6 @@ def run_manager(application_sub_path, ref_input, log_file, sampling_time, info_l
                     
                         runtime_container_cpu_util[(mac["ip"], c1)] = tmp_cpu_util  
 
-                # We have a $(cluster_size)-host cluster.
-                # curr_number_of_core = min(cluster_size * max_core, proactive_number_of_core)
-                # curr_number_of_core = proactive_number_of_core
                 print(f"Proactively estimated number of core for cluster: {cluster_proactive_number_of_core}")
 
                 print(runtime_container_cpu_util)
@@ -487,8 +445,6 @@ def run_manager(application_sub_path, ref_input, log_file, sampling_time, info_l
                         step1_output = run_core_allocator(m1["ip"], m1["port"], m2, runtime_container_core_dist[(m1["ip"], m2)])
         
                         if step1_output == True:
-                            # curr_number_of_core += runtime_container_core_dist[(m1["ip"], m2)]
-                            # curr_number_of_core = max(curr_number_of_core, proactive_number_of_core)
                             print(f"{runtime_container_core_dist[(m1['ip'], m2)]} core(s) has been allocated to {m2} hosted on {m1['ip']}.")
                             
                             if core_power_limit(runtime_container_core_dist[(m1["ip"], m2)]) > curr_power:
@@ -536,8 +492,6 @@ def run_manager(application_sub_path, ref_input, log_file, sampling_time, info_l
         # Adding log data info into the list.
         log_records[iteration_counter] = log
 
-        # curr_error = float("{:.2f}".format(my_utility.convert_from_millisecond_to_second(ref_input - mean_response_time)))
-        # curr_error = ref_input - percent_rt - slo_guard
         curr_error = guarded_slo_target - percent_rt
         # Add error value into list.
         error_data.append((iteration_counter, curr_error))
@@ -569,10 +523,6 @@ def run_manager(application_sub_path, ref_input, log_file, sampling_time, info_l
         if curr_error < 0:
             if curr_power >= math.floor(core_power_limit(curr_number_of_core / cluster_size)) - power_scaling_confidence_value:
                 print("Reactive scaling up decision is gonna be taken...")
-            
-                # to_be_increased_number_of_core = min(max_core * cluster_size - curr_number_of_core, abs(required_number_of_core(estimated_number_of_request, service_rate, guarded_slo_target) - required_number_of_core(previous_number_of_request, service_rate, guarded_slo_target)) * cluster_size)
-
-                # to_be_increased_number_of_core = min(max_core * cluster_size - curr_number_of_core, required_number_of_core(return_best_fit_point(request_rate_window, request_rate_window_size), service_rate, guarded_slo_target) * cluster_size)
 
                 to_be_increased_number_of_core = min(max_core * cluster_size - curr_number_of_core, required_number_of_core(return_best_fit_point(request_rate_window, request_rate_window_size), service_rate, guarded_slo_target) * cluster_size - curr_number_of_core)
 
@@ -581,11 +531,6 @@ def run_manager(application_sub_path, ref_input, log_file, sampling_time, info_l
                 to_be_increased_list.append((iteration_counter, to_be_increased_number_of_core))
 
                 if to_be_increased_number_of_core < 0:
-                    # # Add allocated number of core into the list
-                    # allocated_number_of_core.append((iteration_counter, curr_number_of_core))
-                    # # Add allocated power into the list
-                    # allocated_power_data.append((iteration_counter, int(my_utility.convert_from_watt_to_microwatt(curr_power/number_of_cpu_sockets))))
-                    # continue
                     to_be_increased_number_of_core = reactive_scaling_up_min_step_size
 
                 to_be_increased_list.append((iteration_counter, to_be_increased_number_of_core))
@@ -607,8 +552,6 @@ def run_manager(application_sub_path, ref_input, log_file, sampling_time, info_l
                         step1_output = run_core_allocator(m1["ip"], m1["port"], m2, runtime_container_core_dist[(m1["ip"], m2)])
         
                         if step1_output == True:
-                            # curr_number_of_core = reactive_core
-                            # curr_number_of_core = max(curr_number_of_core, proactive_number_of_core)
                             print(f"{runtime_container_core_dist[(m1['ip'], m2)]} core(s) has been allocated to {m2} hosted on {m1['ip']}.")
                     
                         else:
@@ -775,12 +718,6 @@ def run_manager(application_sub_path, ref_input, log_file, sampling_time, info_l
             # Add allocated power into the list
             allocated_power_data.append((iteration_counter, int(my_utility.convert_from_watt_to_microwatt(curr_power/number_of_cpu_sockets)) ))
             continue
-
-        # if return_best_fit_point(cpu_util_window, cpu_util_window_size) > power_scale_down_cpu_util_threshold:
-        #     # Add allocated number of core into the list
-        #     allocated_number_of_core.append((iteration_counter, curr_number_of_core))
-        #     allocated_power_data.append((iteration_counter, int(my_utility.convert_from_watt_to_microwatt(curr_power/number_of_cpu_sockets)) ))
-        #     continue
         
         power_decrement_ratio = power_step / reactive_scale_down_threshold
         curr_power = math.floor(curr_power - power_decrement_ratio)

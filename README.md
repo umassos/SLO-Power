@@ -197,6 +197,10 @@ $2 --> target SLO (in terms of ms)
 
 $3 --> time granularity that SLO-Power works (1s in our experiments)
 
+$4 --> filepath where HAProxy log file is (Default is /var/log/haproxy.log)
+
 SLO-Power has parameters to set up. This parameters can be set up at [config](./src/power_manager_config.json) file.
+
+In addition, we provide two configuration files which are required to mention if the experiment runs at the single machine level or cluster level. These configuration files are [single_machine.json](./src/single_machine.json) and [cluster_machines.json](./src/cluster_machines.json). These files should be modified based on your own setup. We hardcoded this configuration file in [slo_power_manager](./src/slo_power_manager.py) at line 28 as `machines_config_file = "./cluster_machines.json"`. This line should be updated with the configuration file that is based on your setup. 
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10673278.svg)](https://doi.org/10.5281/zenodo.10673278)
