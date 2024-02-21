@@ -124,10 +124,6 @@ For example, the following command
 
 initiates a httpmon workload generator, using binary located at `/workspace` directory, using traces of `single_node_level_scaled_wikipedia_traces.out`, sending requests to HAProxy hosting on IP of `192.168.245.55`, and saving workload generator output with `v1` postfix. By default, the workload generator output is saved under `/tmp` directory.
 
-Please do not forget to give `generator.sh` executable permission using `chmod` command, e.g.,
-
-`chmod 755 generator.sh`
-
 ## Workload Traces
 We used two real workload traces: wikipedia and Azure traces. We scaled both wikipedia and Azure traces considering our cluster size. For wikipedia, we scaled traces between 60 and 240, while we scaled between 100 and 240 for Azure traces. All these traces are under [workload-traces](./workload-traces/) directory. In addition to the cluster level workload traces, we provided single node level workload traces in the same folder as well. You should pick them accordingly based on your setup.
 
@@ -234,13 +230,15 @@ $3 --> time granularity that SLO-Power works (1s in our experiments)
 $4 --> filepath where HAProxy log file is (Default is /var/log/haproxy.log)
 ```
 
-In the `run_slo_power_manager`, you might need to change `python` command at line 31 based on your setup. For example, if your `python` call is as `python3`, then replace `python` with `python3`.
+In the `run_slo_power_manager`, you might need to change `python` command at line 31 based on your setup. For example, if your `python` call is as `python3`, then replace `python` with `python3`. Also, make sure that you execute `run_slo_power_manager.sh` script inside `src` directory.
 
 For instance, the following command
 
+`cd SLO-Power/src/`
+
 `./run_slo_power_manager.sh artifact_eval/test2/ 250 1 /var/log/haproxy.log`
 
-initiates an experiment, saving the outcomes in the directory `artifact_eval/test2/`, while configuring the target to be `250`ms with results at a granularity of `1`s.
+changes directory to SLO-Power/src, initiates an experiment, saving the outcomes in the directory `artifact_eval/test2/`, while configuring the target to be `250`ms with results at a granularity of `1`s.
 A sample output would produce:
 
 ```
