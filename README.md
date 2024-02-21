@@ -88,7 +88,7 @@ To verify it is installed, execute:
 
 This command should display the version number of the installed HAProxy.
 
-After haproxy is installed, its configuration file located at `/etc/haproxy/haproxy.cfg` needs to be edited. For convenience, we provied this configuration file as [haproxy.cfg](./haproxy.cfg). In this file, parameters of CONTAINER_NAME, IP_ADDRESS_OF_MACHINE_HOSTING_CONTAINER, and PORT_NUMBER_OF_CONTAINER must be provided. Here, CONTAINER_NAME is the container we created earlier which host Mediawiki application. In addition, PORT_NUMBER_OF_CONTAINER must be same as the one when creating the proxy for the container.
+After haproxy is installed, its configuration file located at `/etc/haproxy/haproxy.cfg` needs to be edited. For convenience, we provied this configuration file as [haproxy.cfg](./haproxy.cfg). In this file, parameters of `CONTAINER_NAME`, `IP_ADDRESS_OF_MACHINE_HOSTING_CONTAINER`, and `PORT_NUMBER_OF_CONTAINER` must be provided. Here, `CONTAINER_NAME` is the container we created earlier which host Mediawiki application. In addition, `PORT_NUMBER_OF_CONTAINER` must be same as the one when creating the proxy for the container.
 
 We also provide HAProxy LXC image for your convenience. It can be downloaded from [here](https://drive.google.com/file/d/1KtDZeMU-2enfnRhV5l147G-VW8CjHJHE/view?usp=drive_link)
 
@@ -105,7 +105,7 @@ Workload generator is provided in [workload-generator](./workload-generator/) di
 
 $1 --> path to the binary of the httpmon
 
-$2 --> IP address of HAProxy server
+$2 --> IP address of HAProxy server (Listening port number can be provided as `IP_address:port_number`)
 
 $3 --> workload trace file
 
@@ -114,10 +114,10 @@ $4 --> version of the workload generator's output that is logged
 
 Example command on my end is 
 
-`./generator.sh /workspace/httpmon/httpmon 192.168.245.55:80 /nfs/obelix/users1/msavasci/SLO-Power/workload-traces/scaled_wikipedia_traces.out v1`
+`./generator.sh /workspace/httpmon/httpmon 192.168.245.55 /nfs/obelix/users1/msavasci/SLO-Power/workload-traces/scaled_wikipedia_traces.out v1`
 
 ## Workload Traces
-We used two real workload traces: wikipedia and Azure traces. We scaled both wikipedia and Azure traces considering our cluster size. For wikipedia, we scaled traces between 60 and 240, while we scaled between 100 and 240 for Azure traces. All these traces are under [workload-traces](./workload-traces/) directory.
+We used two real workload traces: wikipedia and Azure traces. We scaled both wikipedia and Azure traces considering our cluster size. For wikipedia, we scaled traces between 60 and 240, while we scaled between 100 and 240 for Azure traces. All these traces are under [workload-traces](./workload-traces/) directory. In addition to the cluster level workload traces, we providep single node level workload traces in the same folder as well. You should pick use them accordingly based on your setup.
 
 ## Running SLO-Power
 The source codes of SLO-Power is located under [src](./src/) directory. In the following, we will show how to run SLO-Power.
