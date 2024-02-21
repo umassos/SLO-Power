@@ -216,11 +216,12 @@ $4 --> filepath where HAProxy log file is (Default is /var/log/haproxy.log)
 
 In the `run_slo_power_manager`, you might need to change `python` command at line 31 based on your setup. For example, if your `python` call is as `python3`, then replace `python` with `python3`.
 
-Example command I have ran successfully on my end is
+For instance, the following command
 
-`./run_slo_power_manager.sh /nfs/obelix/raid2/msavasci/artifact_eval/test2/ 250 1 /var/log/haproxy.log`
+`./run_slo_power_manager.sh artifact_eval/test2/ 250 1 /var/log/haproxy.log`
 
-Sample output on my end is
+initiates an experiment, saving the outcomes in the directory `artifact_eval/test2/`, while configuring the target to be `250`ms with results at a granularity of `1`s.
+A sample output would produce:
 
 ```
 Min core: 2, Max core: 16
