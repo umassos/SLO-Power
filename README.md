@@ -238,7 +238,7 @@ For instance, the following two commands
 
 `./run_slo_power_manager.sh artifact_eval/test2/ 250 1 /var/log/haproxy.log`
 
-changes directory to `SLO-Power/src`, initiates an experiment, saving the outcomes in the directory `artifact_eval/test2/`, while configuring the target to be `250`ms with results at a granularity of `1`s.
+changes current working directory to `SLO-Power/src`, initiates an experiment, saving the outcomes in the directory `artifact_eval/test2/`, while configuring the target to be `250`ms with results at a granularity of `1`s.
 A sample output would produce:
 
 ```
@@ -267,7 +267,7 @@ Power is being set to 80 Watts (increase)
 Power has been set to 80 Watts on 192.168.245.51 (Due to inner power scaler loop).
 ```
 
-We provide two configuration files which are required to set if the experiment runs at the single machine level or cluster level. These configuration files are [single_machine.json](./src/single_machine.json) and [cluster_machines.json](./src/cluster_machines.json). These files should be modified based on your own setup. We hardcoded this configuration file in [slo_power_manager.py](./src/slo_power_manager.py) at `line 28` as `machines_config_file = "./single_machine.json"`. This line should be updated with the configuration file that is based on your setup and path of this configuration file.
+We provide two configuration files which are required to set if the experiment runs at the single machine level or cluster level. These configuration files are [single_machine.json](./src/single_machine.json) and [cluster_machines.json](./src/cluster_machines.json). These files should be modified based on your own setup. We hardcoded this configuration file in [slo_power_manager.py](./src/slo_power_manager.py) at `line 28` as `machines_config_file = "./single_machine.json"`. This line should be updated with the configuration file that is based on your setup, i.e., single node setup or cluster setup. The path of this configuration file might be changed in case file not found error.
 
 In addition, SLO-Power has parameters to set up. This parameters can be set up at [config](./src/power_manager_config.json) file. From this configuration file, a few parameters are specific to setup (single machine level or cluster level). These parameters are given below and should be set accordingly.
 
@@ -275,6 +275,6 @@ In addition, SLO-Power has parameters to set up. This parameters can be set up a
 
 ```service_rate``` keeps service rate of the application under the setup.
 
-P.S. [power_manager_config.json](./src/power_manager_config.json) is hardcoded at `line 29` as `config_file = "./power_manager_config.json`. You might need to update its path based on your current working directory.
+P.S. [power_manager_config.json](./src/power_manager_config.json) is hardcoded at `line 29` as `config_file = "./power_manager_config.json`. You might need to update its path based on your current working directory if you have any file not found error.
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10673278.svg)](https://doi.org/10.5281/zenodo.10673278)
