@@ -5,7 +5,7 @@ The aim of this page is to provide steps and codes to reproduce the results for 
 Below, we describe in detail:
 
 * the configuration of the physical server we used for experiments,
-* the experiments we have performed.
+* the SLO-Power implementation.
 
 # Configuration of Physical Servers
 We run Ubuntu Ubuntu 20.04 LTS on our physical servers. The configuration described below was tested only for that particular version of operating system.
