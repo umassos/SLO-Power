@@ -9,7 +9,7 @@
 # Experiment parameters
 #
 
-IP_ADDRESS_LOAD_BALANCER=$1
+IP_ADDRESS_LOAD_BALANCER=$2
 
 # t=190 # Time in seconds between URLs
 t=10
@@ -21,7 +21,7 @@ ratio=1
 url="http://$IP_ADDRESS_LOAD_BALANCER/gw/index.php/Mehmed_II."
 
 urlfile="./link.out"
-concurrencyfile=$2
+concurrencyfile=$3
 # concurrencyfile="./wikipedia_cluster_1_short.out"
 # concurrencyfile="./eval_workload7.out"
 # concurrencyfile="./azure_trace_slice3_100_240_cluster.out"
@@ -29,7 +29,7 @@ concurrencyfile=$2
 
 FIFO_FILE=httpmon.fifo
 # version="feb16-1.log"
-version=$3
+version=$4
 FIFO_LOG=httpmon-$version
 
 #
@@ -88,7 +88,7 @@ function httpmonKill {
 rm -f $FIFO_FILE
 mkfifo $FIFO_FILE
 
-/workspace/httpmon/httpmon --url $url --concurrency 0 --dump --open < $FIFO_FILE &> $FIFO_LOG &
+$1 --url $url --concurrency 0 --dump --open < $FIFO_FILE &> $FIFO_LOG &
 exec 9> $FIFO_FILE
 
 #
