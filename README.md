@@ -238,7 +238,7 @@ For instance, the following command
 
 `./run_slo_power_manager.sh artifact_eval/test2/ 250 1 /var/log/haproxy.log`
 
-changes directory to SLO-Power/src, initiates an experiment, saving the outcomes in the directory `artifact_eval/test2/`, while configuring the target to be `250`ms with results at a granularity of `1`s.
+changes directory to `SLO-Power/src`, initiates an experiment, saving the outcomes in the directory `artifact_eval/test2/`, while configuring the target to be `250`ms with results at a granularity of `1`s.
 A sample output would produce:
 
 ```
