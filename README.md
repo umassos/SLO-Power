@@ -232,7 +232,7 @@ $4 --> filepath where HAProxy log file is (Default is /var/log/haproxy.log)
 
 In the `run_slo_power_manager`, you might need to change `python` command at line 31 based on your setup. For example, if your `python` call is as `python3`, then replace `python` with `python3`. Also, make sure that you execute `run_slo_power_manager.sh` script inside `src` directory.
 
-For instance, the following command
+For instance, the following two commands
 
 `cd SLO-Power/src/`
 
