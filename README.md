@@ -119,6 +119,7 @@ The source codes of SLO-Power is located under [src](./src/) directory. In the f
 Our SLO-Agent has two modules: power capper and core allocator. 
 
 #### 1.a. Running power capper module (run with `sudo`)
+```
 usage: power_capper_server.py [-h] [-p PORT] [-w WORKERS] [-e POWER]
 
 Power Capping Server
@@ -134,8 +135,10 @@ optional arguments:
                         
   -e POWER, --power POWER
                         Default power (default: 85000000)
+```
 
 #### 1.b. Running core allocator module
+```
 usage: dynamic_core_allocator.py [-h] [-H HOST] [-p PORT] [-w WORKERS] [-d DOMAIN] [-c CORES]
 
 Dynamic Core Allocator
@@ -155,10 +158,12 @@ optional arguments:
 
   -c CORES, --cores CORES
                         Default number of cores (default: 16)
+```
 
 We also developed two services to provide power measurement via Intel RAPL interface and container information such as its CPU utilization measurement. These two services can be run as follows.
 
 ### 2. Running RAPL power measurement service (run with `sudo`)
+```
 usage: rapl_power_monitor_server.py [-h] [-p PORT] [-w WORKERS]
 
 Container Service Server
@@ -170,8 +175,10 @@ optional arguments:
   
   -w WORKERS, --workers WORKERS
                         Max Number of workers (default: 10)
+```
 
 ### 3. Running container service
+```
 usage: container_service_server.py [-h] [-H HOST] [-p PORT] [-w WORKERS]
 
 Container Service Server
@@ -185,13 +192,15 @@ optional arguments:
 
   -w WORKERS, --workers WORKERS
                         Max Number of workers (default: 10)
+```
 
 **Warning** Before running the SLO-Power Manager, make sure that application is warmed up by sending requests from the workload generator.
 
 ### 4. Running SLO-Power Manager
-We provided [bash script](./src/run_slo_power_manager.sh) to run slo-power manager. Usage of the script is as follows:
+We provided a [bash script](./src/run_slo_power_manager.sh) to run slo-power manager Python file. Usage of the script is as follows:
 
-`./run_slo_power_manager $1 $2 $3 $4` where
+```
+./run_slo_power_manager $1 $2 $3 $4 where
 
 $1 --> filepath where experiment files are saved to
 
@@ -200,6 +209,41 @@ $2 --> target SLO (in terms of ms)
 $3 --> time granularity that SLO-Power works (1s in our experiments)
 
 $4 --> filepath where HAProxy log file is (Default is /var/log/haproxy.log)
+```
+
+In the `run_slo_power_manager`, you might need to change `python` command at line 31 based on your setup.
+
+Example command I have ran successfully on my end is
+
+`./run_slo_power_manager.sh /nfs/obelix/raid2/msavasci/artifact_eval/test2/ 250 1 /var/log/haproxy.log`
+
+Sample outout on my end is
+
+```
+Min core: 2, Max core: 16
+Current core info of containers: {('192.168.245.51', 'mediawiki-51-1'): 3}
+Controller max power limit for node: {('192.168.245.51', 'mediawiki-51-1'): 55}
+Target response time of the application: 250 ms
+Ref_input: 250
+slo_guard: 0.8
+Guarded SLO target: 200.0
+HAProxy log file is cleared for the initialization purpose.
+Initial resource calibration is in progress...
+Arrival rate: 41, service rate: 9, expected response time: 0.2 s
+Proactive estimated number of core is 11.
+Proactively estimated number of core for cluster: 11
+{('192.168.245.51', 'mediawiki-51-1'): 0.06}
+{('192.168.245.51', 'mediawiki-51-1'): 11}
+11 core(s) has been allocated to mediawiki-51-1 hosted on 192.168.245.51.
+Power has been set to 77 Watts on 192.168.245.51 due to change in number of core by the proactive scaler.
+Initial resource calibration is done :)
+Iteration: 1, Estimated number of request: 41, Average response time: 125.66666666666667, Tail response time: 140.9
+Proactively scaling up decision is gonna be taken...
+To be increased # cores: 0
+12 core(s) has been allocated to mediawiki-51-1 hosted on 192.168.245.51.
+Power is being set to 80 Watts (increase)
+Power has been set to 80 Watts on 192.168.245.51 (Due to inner power scaler loop).
+```
 
 We provide two configuration files which are required to set if the experiment runs at the single machine level or cluster level. These configuration files are [single_machine.json](./src/single_machine.json) and [cluster_machines.json](./src/cluster_machines.json). These files should be modified based on your own setup. We hardcoded this configuration file in [slo_power_manager.py](./src/slo_power_manager.py) at line 28 as `machines_config_file = "./single_machine.json"`. This line should be updated with the configuration file that is based on your setup.
 
