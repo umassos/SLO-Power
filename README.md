@@ -120,9 +120,9 @@ $4 --> version of the workload generator's output that is logged
 
 For example, the following command 
 
-`./generator.sh /workspace/httpmon 192.168.245.55 /SLO-Power/workload-traces/scaled_wikipedia_traces.out v1`
+`./generator.sh /workspace/httpmon 192.168.245.55 /SLO-Power/workload-traces/single_node_level_scaled_wikipedia_traces.out v1`
 
-initiates a httpmon workload generator, using binary located at `/workspace` directory, using traces of `single_node_level_scaled_wikipedia_traces.out`, sending requests to HAProxy hosting on IP of `192.168.245.55`, and saving workload generator output with `v1` postfix. By default, the workload generator output is saved under `/tmp/` directory.
+initiates a httpmon workload generator, using binary located at `/workspace` directory, using traces of `single_node_level_scaled_wikipedia_traces.out`, sending requests to HAProxy hosting on IP of `192.168.245.55`, and saving workload generator output with `v1` postfix. By default, the workload generator output is saved under `/tmp` directory.
 
 ## Workload Traces
 We used two real workload traces: wikipedia and Azure traces. We scaled both wikipedia and Azure traces considering our cluster size. For wikipedia, we scaled traces between 60 and 240, while we scaled between 100 and 240 for Azure traces. All these traces are under [workload-traces](./workload-traces/) directory. In addition to the cluster level workload traces, we provided single node level workload traces in the same folder as well. You should pick them accordingly based on your setup.
@@ -265,12 +265,14 @@ Power is being set to 80 Watts (increase)
 Power has been set to 80 Watts on 192.168.245.51 (Due to inner power scaler loop).
 ```
 
-We provide two configuration files which are required to set if the experiment runs at the single machine level or cluster level. These configuration files are [single_machine.json](./src/single_machine.json) and [cluster_machines.json](./src/cluster_machines.json). These files should be modified based on your own setup. We hardcoded this configuration file in [slo_power_manager.py](./src/slo_power_manager.py) at line 28 as `machines_config_file = "./single_machine.json"`. This line should be updated with the configuration file that is based on your setup.
+We provide two configuration files which are required to set if the experiment runs at the single machine level or cluster level. These configuration files are [single_machine.json](./src/single_machine.json) and [cluster_machines.json](./src/cluster_machines.json). These files should be modified based on your own setup. We hardcoded this configuration file in [slo_power_manager.py](./src/slo_power_manager.py) at `line 28` as `machines_config_file = "./single_machine.json"`. This line should be updated with the configuration file that is based on your setup and path of this configuration file.
 
 In addition, SLO-Power has parameters to set up. This parameters can be set up at [config](./src/power_manager_config.json) file. From this configuration file, a few parameters are specific to setup (single machine level or cluster level). These parameters are given below and should be set accordingly.
 
 ```cluster_size``` is to mention how many machines are used in the experiment (total number of machines mentioned in `single_machine.json`, i.e., 1 or in `cluster_machines.json`)
 
 ```service_rate``` keeps service rate of the application under the setup.
+
+P.S. [power_manager_config.json](./src/power_manager_config.json) is hardcoded at `line 29` as `config_file = "./power_manager_config.json`. You might need to update its path based on your current working directory.
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10673278.svg)](https://doi.org/10.5281/zenodo.10673278)
