@@ -27,7 +27,7 @@ We suggest you to create a Python virtual environment and install modules inside
 
 To install rapl module, clone the repo first
 
-'git clone https://github.com/wkatsak/py-rapl.git`
+`git clone https://github.com/wkatsak/py-rapl.git`
 
 Then, go to the inside of the directory and run
 
