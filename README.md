@@ -278,4 +278,4 @@ In addition, SLO-Power has parameters to set up. This parameters can be set up a
 
 P.S. [power_manager_config.json](./src/power_manager_config.json) is hardcoded at `line 29` as `config_file = "./power_manager_config.json`. You might need to update its path based on your current working directory if you have any file not found error.
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10673278.svg)](https://doi.org/10.5281/zenodo.10673278)
+[![DOI](https://zenodo.org/badge/758160062.svg)](https://zenodo.org/doi/10.5281/zenodo.10672465)
