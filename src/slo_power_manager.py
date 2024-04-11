@@ -18,6 +18,7 @@ import subprocess
 import pickle
 import json
 import os
+from collections import defaultdict
 
 f_allocated_power_data, f_real_rt, f_tail_rt, f_log_file, f_error_value, f_drop_percent, f_est_number_of_request, f_service_rate, f_allocated_number_of_core_data, f_reactively_allocated_number_of_core_data, f_proactively_allocated_number_of_core_data, f_measured_server_power, f_cpu_util, f_cpu_freq, f_rate_best_fit, f_cpu_util_best_fit, f_to_be_increased_core_list, f_to_be_reduced_core_list = "", "", "", "", "", "", "", "", "", "", "",  "", "", "",  "", "", "", ""
 
@@ -34,51 +35,59 @@ def core_power_limit(number_of_cores):
 
 
 # This method returns [average response time, perct, #req/s, log_data, drop_rate, arrival_rate, service_rate] in this order
-def sample_log(log_file, percentile, sampling_time):
+def sample_log(log_file, application_sub_path, percentile, sampling_time):
     log_lines, response_times = [], []
     count_all_response_codes, count_not_200_response_codes = 0, 0
 
-    # opening file using with so that file get closed after completing work 
     with open(log_file) as f: 
         # read log lines and store it in list
         log_lines = f.readlines()
 
-    # TO DO: 16, 17 depend on date. For one digit days, 17. For two days numbers, 16. So, fix this issue.
-    proc1 = subprocess.run(['cut', '-d', ' ', '-f', '16', log_file], stdout=subprocess.PIPE)
-    # proc1 = subprocess.run(['cut', '-d', ' ', '-f', '17', log_file], stdout=subprocess.PIPE)
-    proc2 = subprocess.run(['cut', '-d', '/', '-f', '1'], input=proc1.stdout, stdout=subprocess.PIPE)
-    proc3 = subprocess.run(['sort', '-n'], input=proc2.stdout, stdout=subprocess.PIPE)
-    proc4 = subprocess.run(['uniq', '-c'], input=proc3.stdout, stdout=subprocess.PIPE)
-    proc5 = subprocess.run(['tail', '-n', '1'], input=proc4.stdout, stdout=subprocess.PIPE)
-    output = proc5.stdout.decode('utf-8').strip()
+    # Initialize a dictionary to store the count of each field
+    field_counts = defaultdict(int)
 
-    occurrence = int(output.split()[0])
-    max_arrival_rate = int(output.split()[1])
-
-    arrival_rate = max_arrival_rate
+    for line in log_lines:
+        splitted = line.split()
     
-    # req/s should be same with arrival rate.
-    request_per_second = arrival_rate
-
-    for incoming_requests in log_lines:
-        splitted = str(incoming_requests).split()
-        
         if len(splitted) < 21:
             continue
-        
+
+        # log_lines.append(line)
+    
         response_code_info = splitted[10]
         page_info = splitted[18]
         response_time_info = int(splitted[20])
 
-        if page_info.strip().startswith('/gw'):
+        if page_info.strip().startswith(application_sub_path):
             count_all_response_codes += 1
+
+            # Split the line by space and extract the 16th field
+            field_16 = splitted[15]
+    
+            # Split the 16th field by '/' and extract the first part
+            field_1 = field_16.split('/')[0]
+    
+            # Increment the count of the extracted field
+            field_counts[field_1] += 1
 
             if response_code_info.strip() == "200":  
                 response_times.append(response_time_info)
-            
+        
             else:
                 count_not_200_response_codes += 1
+
+    ''' TO DO: Handle ValueError: max() arg is an empty sequence if no request comes to the application. '''
+    # Find the field with the highest occurrence
+    max_field = max(field_counts, key=field_counts.get)
+
+    # Get the count of the most frequent field
+    max_count = field_counts[max_field]
+
+    arrival_rate = max_field
     
+    # req/s should be same with arrival rate.
+    request_per_second = arrival_rate
+        
     drop_rate = count_not_200_response_codes / count_all_response_codes
 
     average_rt = stat.mean(response_times)
@@ -87,7 +96,6 @@ def sample_log(log_file, percentile, sampling_time):
 
     service_rate = int(count_all_response_codes / sampling_time)
 
-    # Clean the log file.
     subprocess.run(['sudo', 'truncate', '-s', '0', log_file], stdout=subprocess.PIPE)
     
     return response_times, average_rt, perct, request_per_second, log_lines, drop_rate, arrival_rate, service_rate
@@ -394,7 +402,7 @@ def run_manager(application_sub_path, ref_input, log_file, sampling_time, info_l
 
         time.sleep(sampling_time)
 
-        full_response_times, mean_response_time, percent_rt, estimated_number_of_request, log, drop, arrival_rate, service_rate = sample_log(log_file, rt_percentile, sampling_time)
+        full_response_times, mean_response_time, percent_rt, estimated_number_of_request, log, drop, arrival_rate, service_rate = sample_log(log_file, application_sub_path, rt_percentile, sampling_time)
 
         if mean_response_time <= 1:
             print(f"No (logical) response time has been read; therefore, wait for {sampling_time} seconds.")
